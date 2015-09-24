@@ -24,7 +24,7 @@ namespace SolveAvdoshin
 
 		static int[] ConsoleInput()
 		{
-			return new int[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, }; // TODO: Sdielat
+			return new int[] { 220, 160, 85, 253, 210, 159, 103, 101, 72, }; // TODO: Скопировать сюда нормальный инпут
 		}
 
 		static int[] ReadArgs(string[] args)
@@ -57,21 +57,21 @@ namespace SolveAvdoshin
 			int eqAnswer = AndXorEquation.SolveEq(coefs);
 
 			Console.WriteLine("\nОтвет: " + eqAnswer);
+
+//			BooleanFunction bFun = 	
 		}
 
-		public static void Main(string[] args)
+		public static void Main1(string[] args)
 		{
 			int[] coefs = { -1, -1, -1, -1, -1, -1, -1, -1, -1, };	
 
 			try {
-				coefs = ReadArgs(args);
-
-				Solve(coefs);
-
-				throw new DivideByZeroException("Матибал");
-			}
-			catch(ArgumentNullException) {
-				coefs = ConsoleInput();
+				try {
+					coefs = ReadArgs(args);
+				}
+				catch(ArgumentNullException) {
+					coefs = ConsoleInput();
+				}
 
 				Solve(coefs);
 			}
