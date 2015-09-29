@@ -21,10 +21,25 @@ namespace SolveAvdoshin
 //
 //			PrintDerivatives(new BooleanFunction(26));
 
-			foreach(var t in BooleanExpression.AllTrees(3)) {
-				t.SetIthVar(0, BooleanVariable.B);
-				t.setIthOp(0, BooleanOperation.Xor);
-				Console.WriteLine(t.ToString());
+//			foreach(var t in BooleanExpression.AllTrees(3)) {
+//				t.SetIthVar(0, BooleanVariable.B);
+//				t.setIthOp(0, BooleanOperation.Xor);
+//				Console.WriteLine(t.ToString());
+//			}
+
+//			foreach(var v in Combinatorics.AllNTuples(new BooleanOperation[] { BooleanOperation.And,
+//				BooleanOperation.Or }, 3)) {
+//				foreach(var b in v) {
+//					Console.Write("{0} ", b);
+//				}
+//				Console.WriteLine();
+//			}
+
+			BooleanOperation[] ops = { BooleanOperation.And, BooleanOperation.Or };
+			BooleanVariable[] vars = { BooleanVariable.A, BooleanVariable.B, BooleanVariable.C };
+
+			foreach(var v in BooleanExpression.AllExpressions(3, ops, vars)) {
+				Console.WriteLine(v.ToString());
 			}
 		}
 	}
@@ -128,6 +143,17 @@ namespace SolveAvdoshin
 
 			return ex;
 		}
+
+		public BooleanExpression MininalExpressionInBasis()
+		{
+			throw new NotImplementedException();
+
+//			for(int i = 2; i < 15; i++) {
+//				foreach(var ex in BooleanExpression.AllExpressions(i)) {
+//					
+//				}
+//			}
+		}
 	}
 
 	enum BooleanOperation { Zero, NOR, NotBImp, NotA, NotImp, NotB, Xor, NAND, And, Eq, B, Imp, A, BImp, Or, One };
@@ -160,12 +186,21 @@ namespace SolveAvdoshin
 		public static IEnumerable<BooleanExpression> AllExpressions(int size, BooleanOperation[] ops,
 			BooleanVariable[] vars)
 		{
-			throw new NotImplementedException();
-		}
+			foreach(var ex in AllTrees(size)) {
+				foreach(var opList in Combinatorics.AllNTuples(ops, size)) {
+					foreach(var varList in Combinatorics.AllNTuples(vars, size + 1)) {
+						for(int i = 0; i < size; i++) {
+							ex.setIthOp(i, opList[i]);
+						}
 
-		public BooleanExpression FindMininalInBasis()
-		{
-			throw new NotImplementedException();
+						for(int i = 0; i < size + 1; i++) {
+							ex.SetIthVar(i, varList[i]);
+						}
+
+						yield return ex;
+					}
+				}
+			}
 		}
 	}
 
