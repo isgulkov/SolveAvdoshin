@@ -5,54 +5,84 @@ namespace SolveAvdoshin
 {
 	public static class BooleanFunctions
 	{
-		public static void Main()
+		static readonly BooleanOperation[][] AvdoshinBases = {
+			new BooleanOperation[] {
+				BooleanOperation.Zero,
+				BooleanOperation.NOR,
+				BooleanOperation.NotCoImp,
+				BooleanOperation.NotA,
+				BooleanOperation.NotImp,
+				BooleanOperation.NotB,
+				BooleanOperation.Xor,
+				BooleanOperation.NAND,
+				BooleanOperation.And,
+				BooleanOperation.Eq,
+				BooleanOperation.B,
+				BooleanOperation.Imp,
+				BooleanOperation.A,
+				BooleanOperation.CoImp,
+				BooleanOperation.Or,
+				BooleanOperation.One
+			},
+			new BooleanOperation[] { BooleanOperation.NOR, },
+			new BooleanOperation[] { BooleanOperation.NAND, },
+			new BooleanOperation[] { BooleanOperation.Zero, BooleanOperation.Imp, },
+			new BooleanOperation[] { BooleanOperation.One, BooleanOperation.CoImp, },
+			new BooleanOperation[] { BooleanOperation.Imp, BooleanOperation.CoImp, },
+			new BooleanOperation[] { BooleanOperation.Xor, BooleanOperation.Imp, },
+			new BooleanOperation[] { BooleanOperation.Eq, BooleanOperation.CoImp, },
+			new BooleanOperation[] { BooleanOperation.NotA, BooleanOperation.NotB, BooleanOperation.Imp, },
+			new BooleanOperation[] { BooleanOperation.NotA, BooleanOperation.NotB, BooleanOperation.CoImp, },
+			new BooleanOperation[] { BooleanOperation.NotA, BooleanOperation.NotB, BooleanOperation.Or, },
+			new BooleanOperation[] { BooleanOperation.NotA, BooleanOperation.NotB, BooleanOperation.And, },
+			new BooleanOperation[] { BooleanOperation.Zero, BooleanOperation.Eq, BooleanOperation.And, },
+			new BooleanOperation[] { BooleanOperation.One, BooleanOperation.Xor, BooleanOperation.Or, },
+			new BooleanOperation[] { BooleanOperation.Zero, BooleanOperation.Eq, BooleanOperation.Or, },
+			new BooleanOperation[] { BooleanOperation.One, BooleanOperation.Xor, BooleanOperation.And, },
+			new BooleanOperation[] { BooleanOperation.Xor, BooleanOperation.Eq, BooleanOperation.Or, },
+			new BooleanOperation[] { BooleanOperation.Eq, BooleanOperation.Xor, BooleanOperation.And, },
+		};
+
+		static readonly BooleanVariable[] AllVars = {
+			BooleanVariable.A,
+			BooleanVariable.B,
+			BooleanVariable.C,
+		};
+
+		public static void PrintMinimaInAvdoshinBases(int n)
 		{
-//			Console.WriteLine(ex.ToString());
-//			Console.WriteLine(ex.Eval(true, true, true));
+			BooleanFunction f = new BooleanFunction(n);
 
-//			var f = new BooleanFunction(134);
-//
-//			Console.WriteLine(f.ToString());
-//			Console.WriteLine(f.ToString("L"));
+			Console.WriteLine("\nМинимальные представления функции в базисах (для рисования в винлогике):");
 
-//			var ex = (new BooleanFunction(26)).GetFDNF();
-//
-//			Console.WriteLine(ex.ToString());
-//
-//			PrintDerivatives(new BooleanFunction(26));
+			int i = 0;
 
-//			foreach(var t in BooleanExpression.AllTrees(3)) {
-//				t.SetIthVar(0, BooleanVariable.B);
-//				t.setIthOp(0, BooleanOperation.Xor);
-//				Console.WriteLine(t.ToString());
-//			}
+			Console.WriteLine(" ☻ \tБазис\t\tВыражние");
+			Console.WriteLine();
 
-//			foreach(var v in Combinatorics.AllNTuples(new BooleanOperation[] { BooleanOperation.And,
-//				BooleanOperation.Or }, 3)) {
-//				foreach(var b in v) {
-//					Console.Write("{0} ", b);
-//				}
-//				Console.WriteLine();
-//			}
+			foreach(var basis in AvdoshinBases) {
+				Console.Write("{0,2}\t", i); 
 
-			BooleanOperation[] ops = { BooleanOperation.Zero, BooleanOperation.NOR, BooleanOperation.NotBImp, BooleanOperation.NotA, BooleanOperation.NotImp, BooleanOperation.NotB, BooleanOperation.Xor, BooleanOperation.NAND, BooleanOperation.And, BooleanOperation.Eq, BooleanOperation.B, BooleanOperation.Imp, BooleanOperation.A, BooleanOperation.BImp, BooleanOperation.Or, BooleanOperation.One };
-			BooleanVariable[] vars = { BooleanVariable.A, BooleanVariable.B, BooleanVariable.C };
+				if(i++ != 0) {
+					foreach(var op in basis) {
+						Console.Write(BooleanExpression.PrintOperation(op) + " ");
+					}
+				}
+				else {
+					Console.Write("ОБЩИЙ");
+				}
 
-//			foreach(var v in BooleanExpression.AllExpressions(3, ops, vars)) {
-//				Console.WriteLine(v.ToString());
-//			}
+				if(i == 5) {
+					Console.WriteLine();
+					continue;
+				}
 
-//			BooleanExpression ex = new OpExpression(BooleanOperation.And, BooleanVariable.A,
-//				new OpExpression(BooleanOperation.And, BooleanVariable.B, BooleanVariable.C));
-//
-//			Console.WriteLine(ex);
-//
-//			Console.WriteLine((new BooleanFunction(ex)).ToString("L"));
-//			Console.WriteLine((new BooleanFunction(ex)).Equals(new BooleanFunction(1)));
+				Console.Write("\t\t");
 
-			var ex = new BooleanFunction(26).MininalExpressionInBasis(ops, vars);
-//
-			Console.WriteLine(ex.ToString());
+				var ex = f.MininalExpressionInBasis(basis, AllVars);
+
+				Console.WriteLine(ex.ToString());
+			}
 		}
 	}
 
@@ -173,9 +203,7 @@ namespace SolveAvdoshin
 
 		public BooleanExpression MininalExpressionInBasis(BooleanOperation[] ops, BooleanVariable[] vars)
 		{
-			for(int i = 2; i < 7; i++) {
-				Console.WriteLine("Trying {0}...", i);
-
+			for(int i = 2; i < 15; i++) {
 				foreach(var ex in BooleanExpression.AllExpressions(i, ops, vars)) {
 					if((new BooleanFunction(ex)).Equals(this)) {
 						return ex;
@@ -187,11 +215,13 @@ namespace SolveAvdoshin
 		}
 	}
 
-	enum BooleanOperation { Zero, NOR, NotBImp, NotA, NotImp, NotB, Xor, NAND, And, Eq, B, Imp, A, BImp, Or, One };
+	enum BooleanOperation { Zero, NOR, NotCoImp, NotA, NotImp, NotB, Xor, NAND, And, Eq, B, Imp, A, CoImp, Or, One };
 	enum BooleanVariable { A, B, C };
 
 	abstract class BooleanExpression
 	{
+		public static readonly string[] OpSymbols = new string[] { "0", "↓", "</=", "(NotA)", "=/>", "(NotB)", "⨁", "|", "&", "==", "(B)", "=>", "(A)", "<=", "|", "1", };
+
 		abstract public bool Eval(bool a, bool b, bool c);
 		abstract new public string ToString();
 		abstract public int CountVariables();
@@ -238,12 +268,15 @@ namespace SolveAvdoshin
 				}
 			}
 		}
+
+		public static string PrintOperation(BooleanOperation op)
+		{
+			return OpSymbols[(int)op];
+		}
 	}
 
 	class OpExpression : BooleanExpression
 	{
-		static readonly string[] OpSymbols = new string[] { "(Zero)", "(NOR)", "</=", "(NotA)", "=/>", "(NotB)", "⨁", "(NAND)", "&", "==", "(B)", "=>", "(A)", "<=", "|", "(One)", };
-
 		BooleanOperation Op;
 		BooleanExpression Left, Right;
 
@@ -285,7 +318,7 @@ namespace SolveAvdoshin
 				return false;
 			case BooleanOperation.NOR:
 				return !(aVal || bVal);
-			case BooleanOperation.NotBImp:
+			case BooleanOperation.NotCoImp:
 				return !aVal && bVal;
 			case BooleanOperation.NotA:
 				return !aVal;
@@ -307,7 +340,7 @@ namespace SolveAvdoshin
 				return !aVal || bVal;
 			case BooleanOperation.A:
 				return aVal;
-			case BooleanOperation.BImp:
+			case BooleanOperation.CoImp:
 				return aVal || !bVal;
 			case BooleanOperation.Or:
 				return aVal || bVal;
@@ -320,7 +353,26 @@ namespace SolveAvdoshin
 
 		public override string ToString()
 		{
-			return "(" + Left.ToString() + " " + OpSymbols[(int)Op] + " " + Right.ToString() + ")";
+			switch(Op) {
+			case BooleanOperation.A:
+				return Left.ToString();
+				break;
+			case BooleanOperation.B:
+				return Right.ToString();
+				break;
+			case BooleanOperation.One:
+			case BooleanOperation.Zero:
+				return PrintOperation(Op);
+				break;
+			case BooleanOperation.NotA:
+				return "!" + Left.ToString();
+				break;
+			case BooleanOperation.NotB:
+				return "!" + Right.ToString();
+				break;
+			default:
+				return "(" + Left.ToString() + " " + PrintOperation(Op) + " " + Right.ToString() + ")";
+			}
 		}
 
 		public override int CountVariables()

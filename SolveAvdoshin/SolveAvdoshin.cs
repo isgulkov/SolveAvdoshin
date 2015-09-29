@@ -50,7 +50,7 @@ namespace SolveAvdoshin
 			return coefs;
 		}
 
-		public static void Solve(int[] coefs)
+		public static int Solve(int[] coefs)
 		{
 			Console.WriteLine(PrintEquation(coefs));
 
@@ -58,10 +58,10 @@ namespace SolveAvdoshin
 
 			Console.WriteLine("\nОтвет: " + eqAnswer);
 
-//			BooleanFunction bFun = 	
+			return eqAnswer;
 		}
 
-		public static void Main1(string[] args)
+		public static void Main(string[] args)
 		{
 			int[] coefs = { -1, -1, -1, -1, -1, -1, -1, -1, -1, };	
 
@@ -73,7 +73,9 @@ namespace SolveAvdoshin
 					coefs = ConsoleInput();
 				}
 
-				Solve(coefs);
+				int answer = Solve(coefs);
+
+				BooleanFunctions.PrintMinimaInAvdoshinBases(answer);
 			}
 			catch(FormatException e) {
 				Console.WriteLine("Osheebka: " + e.Message);
