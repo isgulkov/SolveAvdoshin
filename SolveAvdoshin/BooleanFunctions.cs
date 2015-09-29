@@ -31,10 +31,10 @@ namespace SolveAvdoshin
 			new BooleanOperation[] { BooleanOperation.Imp, BooleanOperation.CoImp, },
 			new BooleanOperation[] { BooleanOperation.Xor, BooleanOperation.Imp, },
 			new BooleanOperation[] { BooleanOperation.Eq, BooleanOperation.CoImp, },
-			new BooleanOperation[] { BooleanOperation.NotA, BooleanOperation.NotB, BooleanOperation.Imp, },
-			new BooleanOperation[] { BooleanOperation.NotA, BooleanOperation.NotB, BooleanOperation.CoImp, },
-			new BooleanOperation[] { BooleanOperation.NotA, BooleanOperation.NotB, BooleanOperation.Or, },
-			new BooleanOperation[] { BooleanOperation.NotA, BooleanOperation.NotB, BooleanOperation.And, },
+			new BooleanOperation[] { BooleanOperation.NotA, BooleanOperation.Imp, },
+			new BooleanOperation[] { BooleanOperation.NotA, BooleanOperation.CoImp, },
+			new BooleanOperation[] { BooleanOperation.NotA, BooleanOperation.Or, },
+			new BooleanOperation[] { BooleanOperation.NotA, BooleanOperation.And, },
 			new BooleanOperation[] { BooleanOperation.Zero, BooleanOperation.Eq, BooleanOperation.And, },
 			new BooleanOperation[] { BooleanOperation.One, BooleanOperation.Xor, BooleanOperation.Or, },
 			new BooleanOperation[] { BooleanOperation.Zero, BooleanOperation.Eq, BooleanOperation.Or, },
@@ -57,7 +57,7 @@ namespace SolveAvdoshin
 
 			int i = 0;
 
-			Console.WriteLine(" ☻ \tБазис\t\tВыражние");
+			Console.WriteLine(" ☻ \tБазис\t\t\tВыражние");
 			Console.WriteLine();
 
 			foreach(var basis in AvdoshinBases) {
@@ -72,18 +72,23 @@ namespace SolveAvdoshin
 					Console.Write("ОБЩИЙ");
 				}
 
-				if(i == 5) {
-					Console.WriteLine();
-					continue;
+				Console.Write("\t\t\t");
+
+				try {
+					var ex = f.MininalExpressionInBasis(basis, AllVars);
+
+					Console.WriteLine(ex.ToString());
 				}
-
-				Console.Write("\t\t");
-
-				var ex = f.MininalExpressionInBasis(basis, AllVars);
-
-				Console.WriteLine(ex.ToString());
+				catch(TooLongToSearchForExpressionException) {
+					Console.WriteLine("долго искать, пропускаем");
+				}
 			}
 		}
+	}
+
+	class TooLongToSearchForExpressionException : Exception
+	{
+
 	}
 
 	class BooleanFunction // TODO: Make private ?
@@ -93,16 +98,6 @@ namespace SolveAvdoshin
 		public BooleanFunction(int n)
 		{
 			TruthTable = n;
-		}
-
-		public BooleanFunction(BooleanExpression ex)
-		{
-			TruthTable = 0;
-
-			for(int i = 0; i < 8; i++) {
-				TruthTable *= 2;
-				TruthTable += ex.Eval((i >> 2) & 1, (i >> 1) & 1, i & 1);
-			}
 		}
 
 		public bool Equals(BooleanFunction that)
@@ -182,7 +177,7 @@ namespace SolveAvdoshin
 		{
 			BooleanExpression ex = null, cons1;
 
-			for(int i = 0; i < 8; i++) {
+			for(int i = 0; i < 6; i++) {
 				if(!Eval((i >> 2 & 1) == 1, (i >> 1 & 1) == 1, (i & 1) == 1))
 					continue;
 					
@@ -203,20 +198,22 @@ namespace SolveAvdoshin
 
 		public BooleanExpression MininalExpressionInBasis(BooleanOperation[] ops, BooleanVariable[] vars)
 		{
-			for(int i = 2; i < 15; i++) {
+			int depthLimit = ops.Length == 1 ? 10 : ops.Length == 2 ? 8 : 6;
+
+			for(int i = 2; i <= depthLimit; i++) {
 				foreach(var ex in BooleanExpression.AllExpressions(i, ops, vars)) {
-					if((new BooleanFunction(ex)).Equals(this)) {
+					if(TruthTable == ex.GetTruthTable()) {
 						return ex;
 					}
 				}
 			}
 
-			throw new Exception("Minimal expression for function " + this.ToString("S") + " couldn't be found");
+			throw new TooLongToSearchForExpressionException();
 		}
 	}
 
 	enum BooleanOperation { Zero, NOR, NotCoImp, NotA, NotImp, NotB, Xor, NAND, And, Eq, B, Imp, A, CoImp, Or, One };
-	enum BooleanVariable { A, B, C };
+	enum BooleanVariable { A, B, C, One, Two };
 
 	abstract class BooleanExpression
 	{
@@ -231,6 +228,18 @@ namespace SolveAvdoshin
 		public int Eval(int a, int b, int c)
 		{
 			return Eval(a == 1, b == 1, c == 1) ? 1 : 0;
+		}
+
+		public int GetTruthTable()
+		{
+			int truthTable = 0;
+
+			for(int i = 0; i < 8; i++) {
+				truthTable *= 2;
+				truthTable += Eval((i >> 2) & 1, (i >> 1) & 1, i & 1);
+			}
+
+			return truthTable;
 		}
 
 		public static IEnumerable<BooleanExpression> AllTrees(int size)
@@ -249,12 +258,33 @@ namespace SolveAvdoshin
 			}
 		}
 
+		public static bool CheckVarList(BooleanVariable[] varList, BooleanVariable[] allVars)
+		{
+			foreach(var variable in allVars) {
+				bool varPresent = false;
+
+				foreach(var v in varList) {
+					if(v == variable) {
+						varPresent = true;
+						break;
+					}
+				}
+
+				if(!varPresent) return false;
+			}
+
+			return true;
+		}
+
 		public static IEnumerable<BooleanExpression> AllExpressions(int size, BooleanOperation[] ops,
 			BooleanVariable[] vars)
 		{
 			foreach(var ex in AllTrees(size)) {
-				foreach(var opList in Combinatorics.AllNTuples(ops, size)) {
-					foreach(var varList in Combinatorics.AllNTuples(vars, size + 1)) {
+				foreach(var varList in Combinatorics.AllNTuples(vars, size + 1)) {
+					if(!CheckVarList(varList, vars))
+						continue;
+					
+					foreach(var opList in Combinatorics.AllNTuples(ops, size)) {
 						for(int i = 0; i < size; i++) {
 							ex.setIthOp(i, opList[i]);
 						}
@@ -356,20 +386,15 @@ namespace SolveAvdoshin
 			switch(Op) {
 			case BooleanOperation.A:
 				return Left.ToString();
-				break;
 			case BooleanOperation.B:
 				return Right.ToString();
-				break;
 			case BooleanOperation.One:
 			case BooleanOperation.Zero:
 				return PrintOperation(Op);
-				break;
 			case BooleanOperation.NotA:
 				return "!" + Left.ToString();
-				break;
 			case BooleanOperation.NotB:
 				return "!" + Right.ToString();
-				break;
 			default:
 				return "(" + Left.ToString() + " " + PrintOperation(Op) + " " + Right.ToString() + ")";
 			}
