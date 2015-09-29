@@ -35,22 +35,49 @@ namespace SolveAvdoshin
 //				Console.WriteLine();
 //			}
 
-			BooleanOperation[] ops = { BooleanOperation.And, BooleanOperation.Or };
+			BooleanOperation[] ops = { BooleanOperation.Zero, BooleanOperation.NOR, BooleanOperation.NotBImp, BooleanOperation.NotA, BooleanOperation.NotImp, BooleanOperation.NotB, BooleanOperation.Xor, BooleanOperation.NAND, BooleanOperation.And, BooleanOperation.Eq, BooleanOperation.B, BooleanOperation.Imp, BooleanOperation.A, BooleanOperation.BImp, BooleanOperation.Or, BooleanOperation.One };
 			BooleanVariable[] vars = { BooleanVariable.A, BooleanVariable.B, BooleanVariable.C };
 
-			foreach(var v in BooleanExpression.AllExpressions(3, ops, vars)) {
-				Console.WriteLine(v.ToString());
-			}
+//			foreach(var v in BooleanExpression.AllExpressions(3, ops, vars)) {
+//				Console.WriteLine(v.ToString());
+//			}
+
+//			BooleanExpression ex = new OpExpression(BooleanOperation.And, BooleanVariable.A,
+//				new OpExpression(BooleanOperation.And, BooleanVariable.B, BooleanVariable.C));
+//
+//			Console.WriteLine(ex);
+//
+//			Console.WriteLine((new BooleanFunction(ex)).ToString("L"));
+//			Console.WriteLine((new BooleanFunction(ex)).Equals(new BooleanFunction(1)));
+
+			var ex = new BooleanFunction(26).MininalExpressionInBasis(ops, vars);
+//
+			Console.WriteLine(ex.ToString());
 		}
 	}
 
 	class BooleanFunction // TODO: Make private ?
 	{
-		int TruthTable;
+		protected int TruthTable;
 
 		public BooleanFunction(int n)
 		{
 			TruthTable = n;
+		}
+
+		public BooleanFunction(BooleanExpression ex)
+		{
+			TruthTable = 0;
+
+			for(int i = 0; i < 8; i++) {
+				TruthTable *= 2;
+				TruthTable += ex.Eval((i >> 2) & 1, (i >> 1) & 1, i & 1);
+			}
+		}
+
+		public bool Equals(BooleanFunction that)
+		{
+			return this.TruthTable == that.TruthTable;
 		}
 
 		public bool Eval(bool a, bool b, bool c)
@@ -144,15 +171,19 @@ namespace SolveAvdoshin
 			return ex;
 		}
 
-		public BooleanExpression MininalExpressionInBasis()
+		public BooleanExpression MininalExpressionInBasis(BooleanOperation[] ops, BooleanVariable[] vars)
 		{
-			throw new NotImplementedException();
+			for(int i = 2; i < 7; i++) {
+				Console.WriteLine("Trying {0}...", i);
 
-//			for(int i = 2; i < 15; i++) {
-//				foreach(var ex in BooleanExpression.AllExpressions(i)) {
-//					
-//				}
-//			}
+				foreach(var ex in BooleanExpression.AllExpressions(i, ops, vars)) {
+					if((new BooleanFunction(ex)).Equals(this)) {
+						return ex;
+					}
+				}
+			}
+
+			throw new Exception("Minimal expression for function " + this.ToString("S") + " couldn't be found");
 		}
 	}
 
@@ -166,6 +197,11 @@ namespace SolveAvdoshin
 		abstract public int CountVariables();
 		abstract public void SetIthVar(int i, BooleanVariable value);
 		abstract public int setIthOp(int i, BooleanOperation value);
+
+		public int Eval(int a, int b, int c)
+		{
+			return Eval(a == 1, b == 1, c == 1) ? 1 : 0;
+		}
 
 		public static IEnumerable<BooleanExpression> AllTrees(int size)
 		{
