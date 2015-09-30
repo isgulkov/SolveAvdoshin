@@ -167,9 +167,6 @@ namespace SolveAvdoshin
 
 		abstract public byte Eval();
 		abstract new public string ToString();
-		abstract public int CountVariables();
-		abstract public void SetIthVar(int i, BooleanVariable value);
-		abstract public int SetIthOp(int i, BooleanOperation value);
 		abstract public BooleanExpression Clone();
 
 		public override int GetHashCode()
@@ -235,20 +232,6 @@ namespace SolveAvdoshin
 			Op = op;
 			Left = left;
 			Right = right;
-		}
-
-		public OpExpression(BooleanOperation op, BooleanVariable left, BooleanExpression right)
-		{
-			Op = op;
-			Left = new VarExpression(left);
-			Right = right;
-		}
-
-		public OpExpression(BooleanOperation op, BooleanExpression left, BooleanVariable right)
-		{
-			Op = op;
-			Left = left;
-			Right = new VarExpression(right);
 		}
 
 		public OpExpression(BooleanOperation op, BooleanVariable left, BooleanVariable right)
@@ -344,45 +327,6 @@ namespace SolveAvdoshin
 				return "(" + Left.ToString() + " " + PrintOperation(Op) + " " + Right.ToString() + ")";
 			}
 		}
-
-		public override int CountVariables()
-		{
-			int res = 0;
-
-			res += Left.CountVariables();
-			res += Right.CountVariables();
-
-			return res;
-		}
-
-		public override void SetIthVar(int i, BooleanVariable value)
-		{
-			if(i >= Left.CountVariables()) {
-				Right.SetIthVar(i - Left.CountVariables(), value);
-			}
-			else {
-				Left.SetIthVar(i, value);
-			}
-		}
-
-		public override int SetIthOp(int i, BooleanOperation value)
-		{
-			if(i < 0) {
-				return 0;
-			}
-			else {
-				if(i == 0) {
-					Op = value;
-				}
-
-				int res = 1;
-
-				res += Left.SetIthOp(i - res, value);
-				res += Right.SetIthOp(i - res, value);
-
-				return res;
-			}
-		}
 	}
 
 	class VarExpression : BooleanExpression
@@ -422,21 +366,6 @@ namespace SolveAvdoshin
 		public override string ToString()
 		{
 			return VarSymbols[(int)Var];
-		}
-
-		public override int CountVariables()
-		{
-			return 1;
-		}
-
-		public override void SetIthVar(int i, BooleanVariable variable)
-		{
-			this.Var = variable;
-		}
-
-		public override int SetIthOp(int i, BooleanOperation value)
-		{
-			return 0;
 		}
 	}
 }
