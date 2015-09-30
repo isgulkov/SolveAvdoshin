@@ -66,9 +66,7 @@ namespace SolveAvdoshin
 
 		public static void PrintMinimaInAvdoshinBases(int n)
 		{
-			BooleanFunction f = new BooleanFunction(26);
-
-			Console.WriteLine("\nМинимальные представления " + f.ToString("S") + " в базисах (для рисования в винлогике):");
+			Console.WriteLine("\nМинимальные представления f_" + n + " в базисах (для рисования в винлогике):");
 
 			Console.WriteLine(" ☻ \tБазис\t\tВыражение");
 			Console.WriteLine();
@@ -88,7 +86,7 @@ namespace SolveAvdoshin
 				Console.Write("\t\t");
 
 				try {
-					var ex = f.MininalExpressionInBasis(AvdoshinBases[i], AvdoshinVars[i]);
+					var ex = FindMininalExpressionInBasis(n, AvdoshinBases[i], AvdoshinVars[i]);
 
 					Console.WriteLine(ex.ToString());
 				}
@@ -98,18 +96,32 @@ namespace SolveAvdoshin
 			}
 		}
 
-		public static void Main()
+		static BooleanExpression FindMininalExpressionInBasis(int n, BooleanOperation[] ops, BooleanVariable[] vars)
 		{
-			var ex = new OpExpression(BooleanOperation.And, BooleanVariable.A,
-				new OpExpression(BooleanOperation.CoImp, BooleanVariable.B, BooleanVariable.C));;
+			int depthLimit = ops.Length == 1 ? 10 : ops.Length == 2 ? 7 : 5;
 
-			var ex1 = ex.Clone();
+			for(int i = 2; i <= depthLimit; i++) {
+				foreach(var ex in BooleanExpression.AllExpressions(i, ops, vars)) {
+					if(n == ex.Eval()) {
+						return ex;
+					}
+				}
+			}
 
-			ex.SetIthOp(0, BooleanOperation.Eq);
-			ex.SetIthVar(1, BooleanVariable.One);
+			throw new TooLongToSearchForExpressionException();
+		}
 
-			Console.WriteLine(ex.ToString());
-			Console.WriteLine(ex1.ToString());
+		public static void Main1()
+		{
+			foreach(var op in AvdoshinBases[0]) {
+				var ex = new OpExpression(op, BooleanVariable.B, BooleanVariable.C);
+
+				Console.WriteLine(ex.Eval() % 16);
+			}
+
+//			foreach(var variable in AvdoshinVars[0]) {
+//				Console.WriteLine((new VarExpression(variable)).Eval());
+//			}
 		}
 	}
 
@@ -118,126 +130,7 @@ namespace SolveAvdoshin
 
 	}
 
-	class BooleanFunction // TODO: Make private ?
-	{
-		protected int TruthTable;
 
-		public BooleanFunction(int n)
-		{
-			TruthTable = n;
-		}
-
-		public bool Equals(BooleanFunction that)
-		{
-			return this.TruthTable == that.TruthTable;
-		}
-
-		public bool Eval(bool a, bool b, bool c)
-		{
-			return (TruthTable >> (7 - (a ? 4 : 0) - (b ? 2 : 0) - (c ? 1 : 0)) & 1) == 1;
-		}
-			
-		public int Eval(int a, int b, int c)
-		{
-			return TruthTable >> (7 - a * 4 - b * 2 - c) & 1;
-		}
-
-		public static string VarRows()
-		{
-			string[] lines = new string[] { "A ", "B ", "C ", };
-
-			for(int i = 0; i < 8; i++) {
-				lines[0] += (i >> 2 & 1) + " ";
-				lines[1] += (i >> 1 & 1) + " ";
-				lines[2] += (i & 1) + " ";
-			}
-
-			return String.Join("\n", lines) + "\n";
-		}
-
-		public static string DelimRow()
-		{
-			string line = "--";
-
-			for(int i = 0; i < 8; i++) {
-				line += "--";
-			}
-
-			return line + "\n";
-		}
-
-		public string FuncRow()
-		{
-			string line = "F ";
-
-			for(int i = 0; i < 8; i++) {
-				line += (Eval((i >> 2 & 1) == 1, (i >> 1 & 1) == 1, (i & 1) == 1) ? 1 : 0) + " ";
-			}
-
-			return line + "\n";
-		}
-
-		public string ToString(string format)
-		{
-			if(format == "L") {
-				string result = "";
-
-				result += VarRows();
-				result += DelimRow();
-				result += FuncRow();
-
-				return result;
-			}
-			else if(format == "S") {
-				return "F_" + TruthTable;
-			}
-			else
-				throw new ArgumentException("Invalid format string. Use L for long or S for short");
-		}
-
-		public override string ToString()
-		{
-			return ToString("S");
-		}
-
-		public BooleanExpression GetFDNF() // СДНФ
-		{
-			BooleanExpression ex = null, cons1;
-
-			for(int i = 0; i < 6; i++) {
-				if(!Eval((i >> 2 & 1) == 1, (i >> 1 & 1) == 1, (i & 1) == 1))
-					continue;
-					
-				BooleanExpression varA, varB, varC;
-
-				varA = new VarExpression(BooleanVariable.A, (i >> 2 & 1) != 1);
-				varB = new VarExpression(BooleanVariable.B, (i >> 1 & 1) != 1);
-				varC = new VarExpression(BooleanVariable.C, (i & 1) != 1);
-
-				cons1 = new OpExpression(BooleanOperation.And,
-					new OpExpression(BooleanOperation.And, varA, varB), varC);
-
-				ex = ex != null ? new OpExpression(BooleanOperation.Or, cons1, ex) : cons1;
-			}
-
-			return ex;
-		}
-
-		public BooleanExpression MininalExpressionInBasis(BooleanOperation[] ops, BooleanVariable[] vars)
-		{
-			int depthLimit = ops.Length == 1 ? 10 : ops.Length == 2 ? 7 : 5;
-
-			for(int i = 2; i <= depthLimit; i++) {
-				foreach(var ex in BooleanExpression.AllExpressions(i, ops, vars)) {
-					if(TruthTable == ex.GetTruthTable()) {
-						return ex;
-					}
-				}
-			}
-
-			throw new TooLongToSearchForExpressionException();
-		}
-	}
 
 	enum BooleanOperation { Zero, NOR, NotCoImp, NotA, NotImp, NotB, Xor, NAND, And, Eq, B, Imp, A, CoImp, Or, One };
 	enum BooleanVariable { A, B, C, Zero, One, };
@@ -246,29 +139,12 @@ namespace SolveAvdoshin
 	{
 		public static readonly string[] OpSymbols = new string[] { "0", "↓", "</=", "(!A)", "=/>", "(!B)", "⨁", "|", "&", "==", "(B)", "=>", "(A)", "<=", "|", "1", };
 
-		abstract public bool Eval(bool a, bool b, bool c);
+		abstract public byte Eval();
 		abstract new public string ToString();
 		abstract public int CountVariables();
 		abstract public void SetIthVar(int i, BooleanVariable value);
 		abstract public int SetIthOp(int i, BooleanOperation value);
 		abstract public BooleanExpression Clone();
-
-		public int Eval(int a, int b, int c)
-		{
-			return Eval(a == 1, b == 1, c == 1) ? 1 : 0;
-		}
-
-		public int GetTruthTable()
-		{
-			int truthTable = 0;
-
-			for(int i = 0; i < 8; i++) {
-				truthTable *= 2;
-				truthTable += Eval((i >> 2) & 1, (i >> 1) & 1, i & 1);
-			}
-
-			return truthTable;
-		}
 
 		public static IEnumerable<BooleanExpression> AllTrees(int size)
 		{
@@ -373,47 +249,67 @@ namespace SolveAvdoshin
 			return new OpExpression(Op, Left.Clone(), Right.Clone());
 		}
 
-		public override bool Eval(bool a, bool b, bool c)
+		public override byte Eval()
 		{
-			bool aVal = Left.Eval(a, b, c);
-			bool bVal = Right.Eval(a, b, c);
+			byte aVal = Left.Eval();
+			byte bVal = Right.Eval();
+
+			int res;
 
 			switch(Op) {
 			case BooleanOperation.Zero:
-				return false;
+				res = 0x00;
+				break;
 			case BooleanOperation.NOR:
-				return !(aVal || bVal);
+				res = ~(aVal | bVal);
+				break;
 			case BooleanOperation.NotCoImp:
-				return !aVal && bVal;
+				res = ~aVal & bVal;
+				break;
 			case BooleanOperation.NotA:
-				return !aVal;
+				res = ~aVal;
+				break;
 			case BooleanOperation.NotImp:
-				return aVal && !bVal;
+				res = aVal & ~bVal;
+				break;
 			case BooleanOperation.NotB:
-				return !bVal;
+				res = ~bVal;
+				break;
 			case BooleanOperation.Xor:
-				return aVal != bVal;
+				res = aVal ^ bVal;
+				break;
 			case BooleanOperation.NAND:
-				return !(aVal && bVal);
+				res = ~(aVal & bVal);
+				break;
 			case BooleanOperation.And:
-				return aVal && bVal;
+				res = aVal & bVal;
+				break;
 			case BooleanOperation.Eq:
-				return aVal == bVal;
+				res = aVal ^ (~bVal);
+				break;
 			case BooleanOperation.B:
-				return bVal;
+				res = bVal;
+				break;
 			case BooleanOperation.Imp:
-				return !aVal || bVal;
+				res = ~aVal | bVal;
+				break;
 			case BooleanOperation.A:
-				return aVal;
+				res = aVal;
+				break;
 			case BooleanOperation.CoImp:
-				return aVal || !bVal;
+				res = aVal | ~bVal;
+				break;
 			case BooleanOperation.Or:
-				return aVal || bVal;
+				res = aVal | bVal;
+				break;
 			case BooleanOperation.One:
-				return true;
+				res = 0xFF;
+				break;
 			default:
 				throw new ArgumentException();
 			}
+
+			return (byte)res;
 		}
 
 		public override string ToString()
@@ -491,19 +387,19 @@ namespace SolveAvdoshin
 			return new VarExpression(Var);
 		}
 
-		public override bool Eval(bool a, bool b, bool c)
+		public override byte Eval()
 		{
 			switch(Var) {
 			case BooleanVariable.A:
-				return a;
+				return 0x0F;
 			case BooleanVariable.B:
-				return b;
+				return 0x33;
 			case BooleanVariable.C:
-				return c;
+				return 0x55;
 			case BooleanVariable.Zero:
-				return false;
+				return 0x00;
 			case BooleanVariable.One:
-				return true;
+				return 0xFF;
 			default:
 				throw new Exception("Nigga wat?");
 			}
