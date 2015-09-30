@@ -5,6 +5,27 @@ namespace SolveAvdoshin
 {
 	public static class BooleanFunctions
 	{
+		static readonly string[] AvdoshinNames = {
+			"ОБЩИЙ",
+			"NOR",
+			"NAND",
+			"0, IMP",
+			"1, COIMP",
+			"IMP, COIMP",
+			"XOR, IMP",
+			"EQV, COIMP",
+			"NOT, IMP",
+			"NOT, COIMP",
+			"NOT, OR",
+			"NOT, AND",
+			"0, EQV, AND",
+			"1, XOR, OR",
+			"0, EQV, OR",
+			"1, XOR, AND",
+			"XOR, EQV, OR",
+			"EQV, XOR, AND",
+		};
+
 		static readonly BooleanOperation[][] AvdoshinBases = {
 			new BooleanOperation[] {
 				BooleanOperation.Zero,
@@ -66,66 +87,71 @@ namespace SolveAvdoshin
 
 		public static void PrintMinimaInAvdoshinBases(int n)
 		{
+			n = 253;
+
 			Console.WriteLine("\nМинимальные представления f_" + n + " в базисах (для рисования в винлогике):");
 
-			Console.WriteLine(" ☻ \tБазис\t\tВыражение");
+			Console.WriteLine(" ☻ \tБазис        \t\tВыражение");
 			Console.WriteLine();
 
 			for(int i = 0; i < AvdoshinBases.Length; i++) {
-				Console.Write("{0,2}\t", i);
-
-				if(i != 0) {
-					foreach(var op in AvdoshinBases[i]) {
-						Console.Write(BooleanExpression.PrintOperation(op) + " ");
-					}
-				}
-				else {
-					Console.Write("ОБЩИЙ");
-				}
-
-				Console.Write("\t\t");
+				Console.Write("{0,2}\t{1}\t\t", i, AvdoshinNames[i].PadRight(13));
 
 				try {
 					var ex = FindMininalExpressionInBasis(n, AvdoshinBases[i], AvdoshinVars[i]);
 
 					Console.WriteLine(ex.ToString());
 				}
-				catch(TooLongToSearchForExpressionException) {
-					Console.WriteLine("долго искать, пропускаем");
+				catch(CouldntFindExpressionException) {
+					Console.WriteLine("не нашлось");
 				}
 			}
 		}
 
 		static BooleanExpression FindMininalExpressionInBasis(int n, BooleanOperation[] ops, BooleanVariable[] vars)
 		{
-			int depthLimit = ops.Length == 1 ? 10 : ops.Length == 2 ? 7 : 5;
+			var queue = new Queue<BooleanExpression>();
+			var knownTruthTables = new HashSet<byte>();
+			var knownExpressions = new HashSet<BooleanExpression>();
 
-			for(int i = 2; i <= depthLimit; i++) {
-				foreach(var ex in BooleanExpression.AllExpressions(i, ops, vars)) {
-					if(n == ex.Eval()) {
-						return ex;
+			foreach(var variable in vars) {
+				queue.Enqueue(new VarExpression(variable));
+			}
+
+			while(queue.Count != 0) {
+				var curExperession = queue.Dequeue();
+
+				byte truthTable = curExperession.Eval();
+
+				if(knownTruthTables.Contains(truthTable)) {
+					continue;
+				}
+
+				if(curExperession.Eval() == n) {
+					return curExperession;
+				}
+
+				knownExpressions.Add(curExperession);
+				knownTruthTables.Add(truthTable);
+
+				var newExpressions = new Stack<BooleanExpression>();
+
+				foreach(var anotherExpression in knownExpressions) {
+					foreach(var neighbourExpression in curExperession.CombineWith(anotherExpression, ops)) {
+						newExpressions.Push(neighbourExpression);
 					}
+				}
+
+				while(newExpressions.Count != 0) {
+					queue.Enqueue(newExpressions.Pop());
 				}
 			}
 
-			throw new TooLongToSearchForExpressionException();
-		}
-
-		public static void Main1()
-		{
-			foreach(var op in AvdoshinBases[0]) {
-				var ex = new OpExpression(op, BooleanVariable.B, BooleanVariable.C);
-
-				Console.WriteLine(ex.Eval() % 16);
-			}
-
-//			foreach(var variable in AvdoshinVars[0]) {
-//				Console.WriteLine((new VarExpression(variable)).Eval());
-//			}
+			throw new CouldntFindExpressionException();
 		}
 	}
 
-	class TooLongToSearchForExpressionException : Exception
+	class CouldntFindExpressionException : Exception
 	{
 
 	}
@@ -146,6 +172,16 @@ namespace SolveAvdoshin
 		abstract public int SetIthOp(int i, BooleanOperation value);
 		abstract public BooleanExpression Clone();
 
+		public override int GetHashCode()
+		{
+			return ToString().GetHashCode();
+		}
+
+		public bool Equals(BooleanExpression obj)
+		{
+			return ToString() == obj.ToString();
+		}
+
 		public static IEnumerable<BooleanExpression> AllTrees(int size)
 		{
 			if(size == 0) {
@@ -162,46 +198,24 @@ namespace SolveAvdoshin
 			}
 		}
 
-		public static readonly BooleanVariable[] AllVars = { BooleanVariable.A, BooleanVariable.B, BooleanVariable.C, };
-
-		public static bool CheckVarList(BooleanVariable[] varList)
-		{
-			foreach(var variable in BooleanExpression.AllVars) {
-				bool varPresent = false;
-
-				foreach(var v in varList) {
-					if(v == variable) {
-						varPresent = true;
-						break;
-					}
-				}
-
-				if(!varPresent) return false;
-			}
-
-			return true;
-		}
-
-		public static IEnumerable<BooleanExpression> AllExpressions(int size, BooleanOperation[] ops,
+		public IEnumerable<BooleanExpression> NeighbourExpressions(BooleanOperation[] ops,
 			BooleanVariable[] vars)
 		{
-			foreach(var ex in AllTrees(size)) {
-				foreach(var varList in Combinatorics.AllNTuples(vars, size + 1)) {
-//					if(!CheckVarList(varList, vars))
-//						continue;
-					
-					foreach(var opList in Combinatorics.AllNTuples(ops, size)) {
-						for(int i = 0; i < size; i++) {
-							ex.SetIthOp(i, opList[i]);
-						}
+			foreach(var op in ops) {
+				foreach(var variable in vars) {
+					yield return new OpExpression(op, Clone(), new VarExpression(variable));
 
-						for(int i = 0; i < size + 1; i++) {
-							ex.SetIthVar(i, varList[i]);
-						}
-
-						yield return ex;
-					}
+					yield return new OpExpression(op, new VarExpression(variable), Clone());
 				}
+			}
+		}
+
+		public IEnumerable<BooleanExpression> CombineWith(BooleanExpression anotherExpression,
+			BooleanOperation[] ops)
+		{
+			foreach(var op in ops) {
+				yield return new OpExpression(op, Clone(), anotherExpression.Clone());
+				yield return new OpExpression(op, anotherExpression.Clone(), Clone());
 			}
 		}
 
