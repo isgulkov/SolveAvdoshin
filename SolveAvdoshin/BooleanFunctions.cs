@@ -97,6 +97,20 @@ namespace SolveAvdoshin
 				}
 			}
 		}
+
+		public static void Main()
+		{
+			var ex = new OpExpression(BooleanOperation.And, BooleanVariable.A,
+				new OpExpression(BooleanOperation.CoImp, BooleanVariable.B, BooleanVariable.C));;
+
+			var ex1 = ex.Clone();
+
+			ex.SetIthOp(0, BooleanOperation.Eq);
+			ex.SetIthVar(1, BooleanVariable.One);
+
+			Console.WriteLine(ex.ToString());
+			Console.WriteLine(ex1.ToString());
+		}
 	}
 
 	class TooLongToSearchForExpressionException : Exception
@@ -236,7 +250,8 @@ namespace SolveAvdoshin
 		abstract new public string ToString();
 		abstract public int CountVariables();
 		abstract public void SetIthVar(int i, BooleanVariable value);
-		abstract public int setIthOp(int i, BooleanOperation value);
+		abstract public int SetIthOp(int i, BooleanOperation value);
+		abstract public BooleanExpression Clone();
 
 		public int Eval(int a, int b, int c)
 		{
@@ -301,7 +316,7 @@ namespace SolveAvdoshin
 					
 					foreach(var opList in Combinatorics.AllNTuples(ops, size)) {
 						for(int i = 0; i < size; i++) {
-							ex.setIthOp(i, opList[i]);
+							ex.SetIthOp(i, opList[i]);
 						}
 
 						for(int i = 0; i < size + 1; i++) {
@@ -351,6 +366,11 @@ namespace SolveAvdoshin
 			Op = op;
 			Left = new VarExpression(left);
 			Right = new VarExpression(right);
+		}
+
+		public override BooleanExpression Clone()
+		{
+			return new OpExpression(Op, Left.Clone(), Right.Clone());
 		}
 
 		public override bool Eval(bool a, bool b, bool c)
@@ -435,7 +455,7 @@ namespace SolveAvdoshin
 			}
 		}
 
-		public override int setIthOp(int i, BooleanOperation value)
+		public override int SetIthOp(int i, BooleanOperation value)
 		{
 			if(i < 0) {
 				return 0;
@@ -447,8 +467,8 @@ namespace SolveAvdoshin
 
 				int res = 1;
 
-				res += Left.setIthOp(i - res, value);
-				res += Right.setIthOp(i - res, value);
+				res += Left.SetIthOp(i - res, value);
+				res += Right.SetIthOp(i - res, value);
 
 				return res;
 			}
@@ -464,6 +484,11 @@ namespace SolveAvdoshin
 		public VarExpression(BooleanVariable var, bool not = false)
 		{
 			Var = var;
+		}
+
+		public override BooleanExpression Clone()
+		{
+			return new VarExpression(Var);
 		}
 
 		public override bool Eval(bool a, bool b, bool c)
@@ -499,7 +524,7 @@ namespace SolveAvdoshin
 			this.Var = variable;
 		}
 
-		public override int setIthOp(int i, BooleanOperation value)
+		public override int SetIthOp(int i, BooleanOperation value)
 		{
 			return 0;
 		}
