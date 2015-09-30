@@ -460,23 +460,21 @@ namespace SolveAvdoshin
 		static readonly string[] VarSymbols = new string[] { "A", "B", "C", "0", "1", };
 
 		BooleanVariable Var;
-		bool Not;
 
 		public VarExpression(BooleanVariable var, bool not = false)
 		{
 			Var = var;
-			Not = not;
 		}
 
 		public override bool Eval(bool a, bool b, bool c)
 		{
 			switch(Var) {
 			case BooleanVariable.A:
-				return a != Not;
+				return a;
 			case BooleanVariable.B:
-				return b != Not;
+				return b;
 			case BooleanVariable.C:
-				return c != Not;
+				return c;
 			case BooleanVariable.Zero:
 				return false;
 			case BooleanVariable.One:
@@ -488,7 +486,7 @@ namespace SolveAvdoshin
 
 		public override string ToString()
 		{
-			return (Not ? "!" : "") + VarSymbols[(int)Var];
+			return VarSymbols[(int)Var];
 		}
 
 		public override int CountVariables()
