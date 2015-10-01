@@ -22,9 +22,36 @@ namespace SolveAvdoshin
 			return result;
 		}
 
+		static int ReadInt(string msg, Func<int, bool> constraint)
+		{
+			int res;
+
+			Console.WriteLine("(ввести целое число от 0 до 255)");
+
+			Console.Write(msg + ": ");
+
+			while(!int.TryParse(Console.ReadLine(), out res) || !constraint(res)) {
+				Console.Write("Хуйню ввел. Заново: ");
+			}
+
+			return res;
+		}
+
 		static int[] ConsoleInput()
 		{
-			return new int[] { 220, 160, 85, 253, 210, 159, 103, 101, 72, }; // TODO: Скопировать сюда нормальный инпут
+//			return new int[] { 220, 160, 85, 253, 210, 159, 103, 101, 72, };
+
+			int[] coefs = new int[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, };
+
+			for(int i = 0; i < 9; i++) {
+				Console.WriteLine(PrintEquation(coefs) + "\n");
+
+				coefs[i] = ReadInt("Вводи епт", x => 0 <= x && x <= 255);
+
+				Console.Clear();
+			}
+
+			return coefs;
 		}
 
 		static int[] ReadArgs(string[] args)
