@@ -30,18 +30,18 @@ namespace SolveAvdoshin
 			new BooleanOperation[] {
 				BooleanOperation.Zero,
 				BooleanOperation.NOR,
-				BooleanOperation.NotCoImp,
+				BooleanOperation.CoImp,
 				BooleanOperation.NotA,
-				BooleanOperation.NotImp,
+				BooleanOperation.BCoImp,
 				BooleanOperation.NotB,
 				BooleanOperation.Xor,
 				BooleanOperation.NAND,
 				BooleanOperation.And,
 				BooleanOperation.Eq,
 				BooleanOperation.B,
-				BooleanOperation.Imp,
+				BooleanOperation.BImp,
 				BooleanOperation.A,
-				BooleanOperation.CoImp,
+				BooleanOperation.Imp,
 				BooleanOperation.Or,
 				BooleanOperation.One
 			},
@@ -108,7 +108,7 @@ namespace SolveAvdoshin
 
 		static BooleanExpression FindMininalExpressionInBasis(int n, BooleanOperation[] ops, BooleanVariable[] vars)
 		{
-			var queue = new ImprovisedPriorityQueue<BooleanExpression>(15);
+			var queue = new ImprovisedPriorityQueue<BooleanExpression>(20);
 			var knownTruthTables = new HashSet<byte>();
 			var knownExpressions = new HashSet<BooleanExpression>();
 
@@ -191,14 +191,12 @@ namespace SolveAvdoshin
 
 	}
 
-
-
-	enum BooleanOperation { Zero, NOR, NotCoImp, NotA, NotImp, NotB, Xor, NAND, And, Eq, B, Imp, A, CoImp, Or, One };
+	enum BooleanOperation { Zero, NOR, CoImp, NotA, BCoImp, NotB, Xor, NAND, And, Eq, B, BImp, A, Imp, Or, One };
 	enum BooleanVariable { A, B, C, Zero, One, };
 
 	abstract class BooleanExpression
 	{
-		public static readonly string[] OpSymbols = new string[] { "0", "↓", "</=", "(!A)", "=/>", "(!B)", "⨁", "|", "&", "==", "(B)", "=>", "(A)", "<=", "|", "1", };
+		public static readonly string[] OpSymbols = new string[] { "0", "↓", "=/>", "(!A)", "</=", "(!B)", "⨁", "|", "&", "==", "(B)", "<=", "(A)", "=>", "|", "1", };
 
 		abstract public byte Eval();
 		abstract new public string ToString();
@@ -273,14 +271,14 @@ namespace SolveAvdoshin
 			case BooleanOperation.NOR:
 				res = ~(aVal | bVal);
 				break;
-			case BooleanOperation.NotCoImp:
-				res = ~aVal & bVal;
+			case BooleanOperation.CoImp:
+				res = aVal & ~bVal;
 				break;
 			case BooleanOperation.NotA:
 				res = ~aVal;
 				break;
-			case BooleanOperation.NotImp:
-				res = aVal & ~bVal;
+			case BooleanOperation.BCoImp:
+				res = ~aVal & bVal;
 				break;
 			case BooleanOperation.NotB:
 				res = ~bVal;
@@ -300,14 +298,14 @@ namespace SolveAvdoshin
 			case BooleanOperation.B:
 				res = bVal;
 				break;
-			case BooleanOperation.Imp:
-				res = ~aVal | bVal;
+			case BooleanOperation.BImp:
+				res = aVal | ~bVal;
 				break;
 			case BooleanOperation.A:
 				res = aVal;
 				break;
-			case BooleanOperation.CoImp:
-				res = aVal | ~bVal;
+			case BooleanOperation.Imp:
+				res = ~aVal | bVal;
 				break;
 			case BooleanOperation.Or:
 				res = aVal | bVal;
