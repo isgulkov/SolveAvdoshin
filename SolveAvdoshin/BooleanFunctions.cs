@@ -108,12 +108,12 @@ namespace SolveAvdoshin
 
 		static BooleanExpression FindMininalExpressionInBasis(int n, BooleanOperation[] ops, BooleanVariable[] vars)
 		{
-			var queue = new Queue<BooleanExpression>();
+			var queue = new ImprovisedPriorityQueue<BooleanExpression>(15);
 			var knownTruthTables = new HashSet<byte>();
 			var knownExpressions = new HashSet<BooleanExpression>();
 
 			foreach(var variable in vars) {
-				queue.Enqueue(new VarExpression(variable));
+				queue.TryEnqueue(new VarExpression(variable), 1);
 			}
 
 			while(queue.Count != 0) {
@@ -132,20 +132,57 @@ namespace SolveAvdoshin
 				knownExpressions.Add(curExperession);
 				knownTruthTables.Add(truthTable);
 
-				var newExpressions = new Stack<BooleanExpression>();
-
 				foreach(var anotherExpression in knownExpressions) {
 					foreach(var neighbourExpression in curExperession.CombineWith(anotherExpression, ops)) {
-						newExpressions.Push(neighbourExpression);
+						queue.TryEnqueue(neighbourExpression, neighbourExpression.getSize());
 					}
-				}
-
-				while(newExpressions.Count != 0) {
-					queue.Enqueue(newExpressions.Pop());
 				}
 			}
 
 			throw new CouldntFindExpressionException();
+		}
+	}
+
+	class ImprovisedPriorityQueue<T>
+	{
+		public int Capacity, Count;
+		Queue<T>[] Queues;
+
+		public ImprovisedPriorityQueue(int capacity)
+		{
+			Capacity = capacity;
+			Count = 0;
+
+			Queues = new Queue<T>[capacity + 1];
+
+			for(int i = 1; i <= capacity; i++) {
+				Queues[i] = new Queue<T>();
+			}
+		}
+
+		public bool TryEnqueue(T item, int priority)
+		{
+			if(priority < 1 || priority > Capacity)
+				return false;
+
+			Count += 1;
+			Queues[priority].Enqueue(item);
+			return true;
+		}
+
+		public T Dequeue()
+		{
+			if(Count == 0)
+				throw new Exception("ImprovisedPriorityQueue is empty");
+
+			for(int i = 1; i <= Capacity; i++) {
+				if(Queues[i].Count != 0) {
+					Count -= 1;
+					return Queues[i].Dequeue();
+				}
+			}
+
+			throw new Exception("ImprovisedPriorityQueue is empty");
 		}
 	}
 
@@ -166,6 +203,7 @@ namespace SolveAvdoshin
 		abstract public byte Eval();
 		abstract new public string ToString();
 		abstract public BooleanExpression Clone();
+		abstract public int getSize();
 
 		public override int GetHashCode()
 		{
@@ -175,34 +213,6 @@ namespace SolveAvdoshin
 		public bool Equals(BooleanExpression obj)
 		{
 			return ToString() == obj.ToString();
-		}
-
-		public static IEnumerable<BooleanExpression> AllTrees(int size)
-		{
-			if(size == 0) {
-				yield return new VarExpression(BooleanVariable.A);
-			}
-			else {
-				for(int i = 0; i < size; i++) {
-					foreach(var l in AllTrees(i)) {
-						foreach(var r in AllTrees(size - 1 - i)) {
-							yield return new OpExpression(BooleanOperation.And, l, r);
-						}
-					}
-				}
-			}
-		}
-
-		public IEnumerable<BooleanExpression> NeighbourExpressions(BooleanOperation[] ops,
-			BooleanVariable[] vars)
-		{
-			foreach(var op in ops) {
-				foreach(var variable in vars) {
-					yield return new OpExpression(op, Clone(), new VarExpression(variable));
-
-					yield return new OpExpression(op, new VarExpression(variable), Clone());
-				}
-			}
 		}
 
 		public IEnumerable<BooleanExpression> CombineWith(BooleanExpression anotherExpression,
@@ -242,6 +252,11 @@ namespace SolveAvdoshin
 		public override BooleanExpression Clone()
 		{
 			return new OpExpression(Op, Left.Clone(), Right.Clone());
+		}
+
+		public override int getSize()
+		{
+			return Left.getSize() + Right.getSize() + 1;
 		}
 
 		public override byte Eval()
@@ -341,6 +356,11 @@ namespace SolveAvdoshin
 		public override BooleanExpression Clone()
 		{
 			return new VarExpression(Var);
+		}
+
+		public override int getSize()
+		{
+			return 0;
 		}
 
 		public override byte Eval()
