@@ -87,15 +87,13 @@ namespace SolveAvdoshin
 
 		public static void PrintMinimaInAvdoshinBases(int n)
 		{
-			n = 253;
-
 			Console.WriteLine("\nМинимальные представления f_" + n + " в базисах (для рисования в винлогике):");
 
-			Console.WriteLine(" ☻ \tБазис        \t\tВыражение");
+			Console.WriteLine(" ☻   Базис             Выражение");
 			Console.WriteLine();
 
 			for(int i = 0; i < AvdoshinBases.Length; i++) {
-				Console.Write("{0,2}\t{1}\t\t", i, AvdoshinNames[i].PadRight(13));
+				Console.Write("{0} — {1}", i.ToString("D2"), AvdoshinNames[i].PadRight(18));
 
 				try {
 					var ex = FindMininalExpressionInBasis(n, AvdoshinBases[i], AvdoshinVars[i]);
