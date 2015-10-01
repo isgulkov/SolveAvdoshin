@@ -196,7 +196,7 @@ namespace SolveAvdoshin
 
 	abstract class BooleanExpression
 	{
-		public static readonly string[] OpSymbols = new string[] { "0", "↓", "=/>", "(!A)", "</=", "(!B)", "⨁", "|", "&", "==", "(B)", "<=", "(A)", "=>", "|", "1", };
+		public static readonly string[] OpSymbols = new string[] { "0", "↓", "=/>", "(!A)", "</=", "(!B)", "⨁", "|", "&", "==", "(B)", "<=", "(A)", "=>", "+", "1", };
 
 		abstract public byte Eval();
 		abstract new public string ToString();
