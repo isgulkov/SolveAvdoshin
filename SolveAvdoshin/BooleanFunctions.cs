@@ -149,25 +149,27 @@ namespace SolveAvdoshin
 			Console.WriteLine(f.ToString());
 
 			Console.WriteLine();
-			Console.WriteLine(f.DerivA().ToString("F'_A"));
-			Console.WriteLine(f.DerivB().ToString("F'_B"));
-			Console.WriteLine(f.DerivC().ToString("F'_C"));
+			Console.WriteLine(f.Deriv(BooleanVariable.A).ToString("F'_A"));
+			Console.WriteLine(f.Deriv(BooleanVariable.B).ToString("F'_B"));
+			Console.WriteLine(f.Deriv(BooleanVariable.C).ToString("F'_C"));
 
 			Console.WriteLine();
-			Console.WriteLine(f.DerivA().DerivB().ToString("F''_AB"));
-			Console.WriteLine(f.DerivB().DerivC().ToString("F''_BC"));
-			Console.WriteLine(f.DerivC().DerivA().ToString("F''_AC"));
+			Console.WriteLine(f.Deriv(BooleanVariable.A, BooleanVariable.B).ToString("F''_AB"));
+			Console.WriteLine(f.Deriv(BooleanVariable.B, BooleanVariable.C).ToString("F''_BC"));
+			Console.WriteLine(f.Deriv(BooleanVariable.A, BooleanVariable.C).ToString("F''_AC"));
 
 			Console.WriteLine();
-			Console.WriteLine(f.DerivA().DerivB().DerivC().ToString("F'''_ABC"));
+			Console.WriteLine(f.Deriv(BooleanVariable.A, BooleanVariable.B, BooleanVariable.C)
+				.ToString("F'''_ABC"));
 
 			Console.WriteLine();
-			Console.WriteLine(f.DerivAB().ToString("F'_(A,B)"));
-			Console.WriteLine(f.DerivBC().ToString("F'_(B,C)"));
-			Console.WriteLine(f.DerivAC().ToString("F'_(A,C)"));
+			Console.WriteLine(f.DirectionalDeriv(BooleanVariable.A, BooleanVariable.B).ToString("F'_(A,B)"));
+			Console.WriteLine(f.DirectionalDeriv(BooleanVariable.B, BooleanVariable.C).ToString("F'_(B,C)"));
+			Console.WriteLine(f.DirectionalDeriv(BooleanVariable.A, BooleanVariable.C).ToString("F'_(A,C)"));
 
 			Console.WriteLine();
-			Console.WriteLine(f.DerivABC().ToString("F'_(A,B,C)"));
+			Console.WriteLine(f.DirectionalDeriv(BooleanVariable.A, BooleanVariable.B, BooleanVariable.C)
+				.ToString("F'_(A,B,C)"));
 		}
 	}
 
@@ -210,94 +212,67 @@ namespace SolveAvdoshin
 			return caption.PadRight(10) + " " + String.Join(" ", digits);
 		}
 
-		public BooleanFunction DerivAB()
+		public BooleanFunction DirectionalDeriv(params BooleanVariable[] variables)
 		{
+			Dictionary<BooleanVariable, bool> values;
+
 			int res = 0;
 
 			for(int i = 0; i < 8; i++) {
 				res *= 2;
 
-				bool a = i / 4 == 1;
-				bool b = i / 2 % 2 == 1;
+				values = new Dictionary<BooleanVariable, bool> { { BooleanVariable.A, i / 4 == 1 },
+					{ BooleanVariable.B, i / 2 % 2 == 1 },
+					{ BooleanVariable.C, i % 2 == 1 },
+				};
 
-				res += FixA(a ? 1 : 0).FixB(b ? 1 : 0).EvalAt(i) ^ FixA(a ? 0 : 1).FixB(b ? 0 : 1).EvalAt(i);
+				BooleanFunction leftOp = this;
+				BooleanFunction rightOp = this;
+
+				foreach(var variable in variables) {
+					leftOp = leftOp.FixVar(variable, values[variable] ? 1 : 0);
+					rightOp = rightOp.FixVar(variable, values[variable] ? 0 : 1);
+				}
+
+				res += leftOp.EvalAt(i) ^ rightOp.EvalAt(i);
 			}
 
 			return new BooleanFunction((byte)res);
 		}
 
-		public BooleanFunction DerivBC()
+		public BooleanFunction Deriv(params BooleanVariable[] variables)
+		{
+			BooleanFunction res = this;
+
+			foreach(var variable in variables) {
+				res = new BooleanFunction((byte)(res.FixVar(variable, 0).Eval() ^ res.FixVar(variable, 1).Eval()));
+			}
+
+			return res;
+		}
+
+		BooleanFunction FixVar(BooleanVariable variable, int value)
 		{
 			int res = 0;
 
-			for(int i = 0; i < 8; i++) {
-				res *= 2;
-
-				bool b = i / 2 % 2 == 1;
-				bool c = i % 2 == 1;
-
-				res += FixB(b ? 1 : 0).FixC(c ? 1 : 0).EvalAt(i) ^ FixB(b ? 0 : 1).FixC(c ? 0 : 1).EvalAt(i);
+			switch(variable) {
+			case BooleanVariable.A:
+				res = FixA(value);
+				break;
+			case BooleanVariable.B:
+				res = FixB(value);
+				break;
+			case BooleanVariable.C:
+				res = FixC(value);
+				break;
+			default:
+				throw new ArgumentException("The variable argument for FixVar should be A, B or C");
 			}
 
 			return new BooleanFunction((byte)res);
 		}
 
-		public BooleanFunction DerivAC()
-		{
-			int res = 0;
-
-			for(int i = 0; i < 8; i++) {
-				res *= 2;
-
-				bool a = i / 4 == 1;
-				bool c = i % 2 == 1;
-
-				res += FixA(a ? 1 : 0).FixC(c ? 1 : 0).EvalAt(i) ^ FixA(a ? 0 : 1).FixC(c ? 0 : 1).EvalAt(i);
-			}
-
-			return new BooleanFunction((byte)res);
-		}
-
-		public BooleanFunction DerivABC()
-		{
-			int res = 0;
-
-			for(int i = 0; i < 8; i++) {
-				res *= 2;
-
-				bool a = i / 4 == 1;
-				bool b = i / 2 % 2 == 1;
-				bool c = i % 2 == 1;
-
-				res += FixA(a ? 1 : 0).FixB(b ? 1 : 0).FixC(c ? 1 : 0).EvalAt(i) ^
-					FixA(a ? 0 : 1).FixB(b ? 0 : 1).FixC(c ? 0 : 1).EvalAt(i);
-			}
-
-			return new BooleanFunction((byte)res);
-		}
-
-		public BooleanFunction DerivA()
-		{
-			byte res = (byte)(FixA(0).Eval() ^ FixA(1).Eval());
-
-			return new BooleanFunction(res);
-		}
-
-		public BooleanFunction DerivB()
-		{
-			byte res = (byte)(FixB(0).Eval() ^ FixB(1).Eval());
-
-			return new BooleanFunction(res);
-		}
-
-		public BooleanFunction DerivC()
-		{
-			byte res = (byte)(FixC(0).Eval() ^ FixC(1).Eval());
-
-			return new BooleanFunction(res);
-		}
-
-		BooleanFunction FixA(int value)
+		byte FixA(int value)
 		{
 			int res = 0;
 
@@ -313,10 +288,10 @@ namespace SolveAvdoshin
 				throw new ArgumentException("Value for Fix[Variable] should be either 0 or 1");
 			}
 
-			return new BooleanFunction((byte)res);
+			return (byte)res;
 		}
 
-		BooleanFunction FixB(int value)
+		byte FixB(int value)
 		{
 			int res = 0;
 
@@ -336,10 +311,10 @@ namespace SolveAvdoshin
 				throw new ArgumentException("Value for Fix[Variable] should be either 0 or 1");
 			}
 
-			return new BooleanFunction((byte)res);
+			return (byte)res;
 		}
 
-		BooleanFunction FixC(int value)
+		byte FixC(int value)
 		{
 			int res = 0;
 
@@ -367,7 +342,7 @@ namespace SolveAvdoshin
 				throw new ArgumentException("Value for Fix[Variable] should be either 0 or 1");
 			}
 
-			return new BooleanFunction((byte)res);
+			return (byte)res;
 		}
 	}
 
