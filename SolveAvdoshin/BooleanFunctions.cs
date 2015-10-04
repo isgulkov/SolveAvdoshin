@@ -161,13 +161,13 @@ namespace SolveAvdoshin
 			Console.WriteLine();
 			Console.WriteLine(f.DerivA().DerivB().DerivC().ToString("F'''_ABC"));
 
-			/*Console.WriteLine();
+			Console.WriteLine();
 			Console.WriteLine(f.DerivAB().ToString("F'_(A,B)"));
 			Console.WriteLine(f.DerivBC().ToString("F'_(B,C)"));
 			Console.WriteLine(f.DerivAC().ToString("F'_(A,C)"));
 
 			Console.WriteLine();
-			Console.WriteLine(f.DerivABC().ToString("F'_(A,B,C)"));*/
+			Console.WriteLine(f.DerivABC().ToString("F'_(A,B,C)"));
 		}
 	}
 
@@ -183,6 +183,11 @@ namespace SolveAvdoshin
 		public byte Eval()
 		{
 			return TruthTable;
+		}
+
+		public byte EvalAt(int n)
+		{
+			return (byte)((TruthTable >> (7 - n)) & 1);
 		}
 
 		public new string ToString()
@@ -203,6 +208,72 @@ namespace SolveAvdoshin
 			Array.Reverse(digits);
 
 			return caption.PadRight(10) + " " + String.Join(" ", digits);
+		}
+
+		public BooleanFunction DerivAB()
+		{
+			int res = 0;
+
+			for(int i = 0; i < 8; i++) {
+				res *= 2;
+
+				bool a = i / 4 == 1;
+				bool b = i / 2 % 2 == 1;
+
+				res += FixA(a ? 1 : 0).FixB(b ? 1 : 0).EvalAt(i) ^ FixA(a ? 0 : 1).FixB(b ? 0 : 1).EvalAt(i);
+			}
+
+			return new BooleanFunction((byte)res);
+		}
+
+		public BooleanFunction DerivBC()
+		{
+			int res = 0;
+
+			for(int i = 0; i < 8; i++) {
+				res *= 2;
+
+				bool b = i / 2 % 2 == 1;
+				bool c = i % 2 == 1;
+
+				res += FixB(b ? 1 : 0).FixC(c ? 1 : 0).EvalAt(i) ^ FixB(b ? 0 : 1).FixC(c ? 0 : 1).EvalAt(i);
+			}
+
+			return new BooleanFunction((byte)res);
+		}
+
+		public BooleanFunction DerivAC()
+		{
+			int res = 0;
+
+			for(int i = 0; i < 8; i++) {
+				res *= 2;
+
+				bool a = i / 4 == 1;
+				bool c = i % 2 == 1;
+
+				res += FixA(a ? 1 : 0).FixC(c ? 1 : 0).EvalAt(i) ^ FixA(a ? 0 : 1).FixC(c ? 0 : 1).EvalAt(i);
+			}
+
+			return new BooleanFunction((byte)res);
+		}
+
+		public BooleanFunction DerivABC()
+		{
+			int res = 0;
+
+			for(int i = 0; i < 8; i++) {
+				res *= 2;
+
+				bool a = i / 4 == 1;
+				bool b = i / 2 % 2 == 1;
+				bool c = i % 2 == 1;
+
+				res += FixA(a ? 1 : 0).FixB(b ? 1 : 0).FixC(c ? 1 : 0).EvalAt(i) ^
+					FixA(a ? 0 : 1).FixB(b ? 0 : 1).FixC(c ? 0 : 1).EvalAt(i);
+			}
+
+			return new BooleanFunction((byte)res);
 		}
 
 		public BooleanFunction DerivA()
