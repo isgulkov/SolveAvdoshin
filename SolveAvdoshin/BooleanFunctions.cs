@@ -141,6 +141,163 @@ namespace SolveAvdoshin
 
 			throw new CouldntFindExpressionException();
 		}
+
+		public static void Main()
+		{
+			var f = new BooleanFunction(26);
+
+			Console.WriteLine(f.ToString());
+
+			Console.WriteLine();
+			Console.WriteLine(f.DerivA().ToString("F'_A"));
+			Console.WriteLine(f.DerivB().ToString("F'_B"));
+			Console.WriteLine(f.DerivC().ToString("F'_C"));
+
+			Console.WriteLine();
+			Console.WriteLine(f.DerivA().DerivB().ToString("F''_AB"));
+			Console.WriteLine(f.DerivB().DerivC().ToString("F''_BC"));
+			Console.WriteLine(f.DerivC().DerivA().ToString("F''_AC"));
+
+			Console.WriteLine();
+			Console.WriteLine(f.DerivA().DerivB().DerivC().ToString("F'''_ABC"));
+
+			/*Console.WriteLine();
+			Console.WriteLine(f.DerivAB().ToString("F'_(A,B)"));
+			Console.WriteLine(f.DerivBC().ToString("F'_(B,C)"));
+			Console.WriteLine(f.DerivAC().ToString("F'_(A,C)"));
+
+			Console.WriteLine();
+			Console.WriteLine(f.DerivABC().ToString("F'_(A,B,C)"));*/
+		}
+	}
+
+	class BooleanFunction
+	{
+		byte TruthTable;
+
+		public BooleanFunction(byte n)
+		{
+			TruthTable = n;
+		}
+
+		public byte Eval()
+		{
+			return TruthTable;
+		}
+
+		public new string ToString()
+		{
+			return ToString("F");
+		}
+
+		public string ToString(string caption)
+		{
+			int n = TruthTable;
+			char[] digits = new char[8];
+
+			for(int i = 0; i < 8; i++) {
+				digits[i] += (n % 2).ToString()[0];
+				n /= 2;
+			}
+
+			Array.Reverse(digits);
+
+			return caption.PadRight(10) + " " + String.Join(" ", digits);
+		}
+
+		public BooleanFunction DerivA()
+		{
+			byte res = (byte)(FixA(0).Eval() ^ FixA(1).Eval());
+
+			return new BooleanFunction(res);
+		}
+
+		public BooleanFunction DerivB()
+		{
+			byte res = (byte)(FixB(0).Eval() ^ FixB(1).Eval());
+
+			return new BooleanFunction(res);
+		}
+
+		public BooleanFunction DerivC()
+		{
+			byte res = (byte)(FixC(0).Eval() ^ FixC(1).Eval());
+
+			return new BooleanFunction(res);
+		}
+
+		BooleanFunction FixA(int value)
+		{
+			int res = 0;
+
+			if(value == 0) {
+				res = TruthTable >> 4;
+				res += (TruthTable >> 4) * 16;
+			}
+			else if(value == 1) {
+				res = TruthTable & 15;
+				res += (TruthTable & 15) * 16;
+			}
+			else {
+				throw new ArgumentException("Value for Fix[Variable] should be either 0 or 1");
+			}
+
+			return new BooleanFunction((byte)res);
+		}
+
+		BooleanFunction FixB(int value)
+		{
+			int res = 0;
+
+			if(value == 0) {
+				res += (TruthTable >> 2) & 3;
+				res += ((TruthTable >> 2) & 3) * 4;
+				res += ((TruthTable >> 6) & 3) * 16;
+				res += ((TruthTable >> 6) & 3) * 64;
+			}
+			else if(value == 1) {
+				res += TruthTable & 3;
+				res += (TruthTable & 3) * 4;
+				res += ((TruthTable >> 4) & 3) * 16;
+				res += ((TruthTable >> 4) & 3) * 64;
+			}
+			else {
+				throw new ArgumentException("Value for Fix[Variable] should be either 0 or 1");
+			}
+
+			return new BooleanFunction((byte)res);
+		}
+
+		BooleanFunction FixC(int value)
+		{
+			int res = 0;
+
+			if(value == 0) {
+				res += (TruthTable >> 1) & 1;
+				res += ((TruthTable >> 1) & 1) * 2;
+				res += ((TruthTable >> 3) & 1) * 4;
+				res += ((TruthTable >> 3) & 1) * 8;
+				res += ((TruthTable >> 5) & 1) * 16;
+				res += ((TruthTable >> 5) & 1) * 32;
+				res += ((TruthTable >> 7) & 1) * 64;
+				res += ((TruthTable >> 7) & 1) * 128;
+			}
+			else if(value == 1) {
+				res += TruthTable & 1;
+				res += (TruthTable & 1) * 2;
+				res += ((TruthTable >> 2) & 1) * 4;
+				res += ((TruthTable >> 2) & 1) * 8;
+				res += ((TruthTable >> 4) & 1) * 16;
+				res += ((TruthTable >> 4) & 1) * 32;
+				res += ((TruthTable >> 6) & 1) * 64;
+				res += ((TruthTable >> 6) & 1) * 128;
+			}
+			else {
+				throw new ArgumentException("Value for Fix[Variable] should be either 0 or 1");
+			}
+
+			return new BooleanFunction((byte)res);
+		}
 	}
 
 	class ImprovisedPriorityQueue<T>
