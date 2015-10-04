@@ -29,11 +29,12 @@ namespace SolveAvdoshin
 		static readonly BooleanOperation[][] AvdoshinBases = {
 			new BooleanOperation[] {
 				BooleanOperation.Zero,
+				BooleanOperation.One,
+				BooleanOperation.NotA,
+				BooleanOperation.NotB,
 				BooleanOperation.NOR,
 				BooleanOperation.CoImp,
-				BooleanOperation.NotA,
 				BooleanOperation.BCoImp,
-				BooleanOperation.NotB,
 				BooleanOperation.Xor,
 				BooleanOperation.NAND,
 				BooleanOperation.And,
@@ -43,7 +44,6 @@ namespace SolveAvdoshin
 				BooleanOperation.A,
 				BooleanOperation.Imp,
 				BooleanOperation.Or,
-				BooleanOperation.One
 			},
 			new BooleanOperation[] { BooleanOperation.NOR, },
 			new BooleanOperation[] { BooleanOperation.NAND, },
@@ -96,7 +96,7 @@ namespace SolveAvdoshin
 				Console.Write("{0} — {1}", i.ToString("D2"), AvdoshinNames[i].PadRight(18));
 
 				try {
-					var ex = FindMininalExpressionInBasis(n, AvdoshinBases[i], AvdoshinVars[i]);
+					var ex = BooleanExpression.FindMininalExpressionInBasis(n, AvdoshinBases[i], AvdoshinVars[i]);
 
 					Console.WriteLine(ex.ToString());
 				}
@@ -106,70 +106,101 @@ namespace SolveAvdoshin
 			}
 		}
 
-		static BooleanExpression FindMininalExpressionInBasis(int n, BooleanOperation[] ops, BooleanVariable[] vars)
+		public static void PrintDerivatives(int n)
 		{
-			var queue = new ImprovisedPriorityQueue<BooleanExpression>(20);
-			var knownTruthTables = new HashSet<byte>();
-			var knownExpressions = new HashSet<BooleanExpression>();
+			BooleanFunction f = new BooleanFunction((byte)n);
 
-			foreach(var variable in vars) {
-				queue.TryEnqueue(new VarExpression(variable), 1);
-			}
+			Console.WriteLine((new BooleanFunction(0x0F)).ToString("A"));
+			Console.WriteLine((new BooleanFunction(0x33)).ToString("B"));
+			Console.WriteLine((new BooleanFunction(0x55)).ToString("C"));
 
-			while(queue.Count != 0) {
-				var curExperession = queue.Dequeue();
+			Console.WriteLine(f.ToString("F"));
 
-				byte truthTable = curExperession.Eval();
-
-				if(knownTruthTables.Contains(truthTable)) {
-					continue;
-				}
-
-				if(curExperession.Eval() == n) {
-					return curExperession;
-				}
-
-				knownExpressions.Add(curExperession);
-				knownTruthTables.Add(truthTable);
-
-				foreach(var anotherExpression in knownExpressions) {
-					foreach(var neighbourExpression in curExperession.CombineWith(anotherExpression, ops)) {
-						queue.TryEnqueue(neighbourExpression, neighbourExpression.getSize());
-					}
-				}
-			}
-
-			throw new CouldntFindExpressionException();
-		}
-
-		public static void Main()
-		{
-			var f = new BooleanFunction(26);
-
-			Console.WriteLine(f.ToString());
-
-			Console.WriteLine();
 			Console.WriteLine(f.Deriv(BooleanVariable.A).ToString("F'_A"));
 			Console.WriteLine(f.Deriv(BooleanVariable.B).ToString("F'_B"));
 			Console.WriteLine(f.Deriv(BooleanVariable.C).ToString("F'_C"));
 
-			Console.WriteLine();
 			Console.WriteLine(f.Deriv(BooleanVariable.A, BooleanVariable.B).ToString("F''_AB"));
 			Console.WriteLine(f.Deriv(BooleanVariable.B, BooleanVariable.C).ToString("F''_BC"));
 			Console.WriteLine(f.Deriv(BooleanVariable.A, BooleanVariable.C).ToString("F''_AC"));
 
-			Console.WriteLine();
 			Console.WriteLine(f.Deriv(BooleanVariable.A, BooleanVariable.B, BooleanVariable.C)
 				.ToString("F'''_ABC"));
+		}
 
-			Console.WriteLine();
+		public static void Print2DirectionalDerivatives(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			Console.WriteLine((new BooleanFunction(0x0F)).ToString("A"));
+			Console.WriteLine((new BooleanFunction(0x33)).ToString("B"));
+			Console.WriteLine((new BooleanFunction(0x55)).ToString("C"));
+
+			Console.WriteLine(f.ToString("F"));
+
 			Console.WriteLine(f.DirectionalDeriv(BooleanVariable.A, BooleanVariable.B).ToString("F'_(A,B)"));
 			Console.WriteLine(f.DirectionalDeriv(BooleanVariable.B, BooleanVariable.C).ToString("F'_(B,C)"));
 			Console.WriteLine(f.DirectionalDeriv(BooleanVariable.A, BooleanVariable.C).ToString("F'_(A,C)"));
+		}
 
-			Console.WriteLine();
+		public static void Print3DirectionalDerivative(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			Console.WriteLine((new BooleanFunction(0x0F)).ToString("A"));
+			Console.WriteLine((new BooleanFunction(0x33)).ToString("B"));
+			Console.WriteLine((new BooleanFunction(0x55)).ToString("C"));
+
+			Console.WriteLine(f.ToString("F"));
+
 			Console.WriteLine(f.DirectionalDeriv(BooleanVariable.A, BooleanVariable.B, BooleanVariable.C)
 				.ToString("F'_(A,B,C)"));
+		}
+
+		public static void PrintExpressionsForDerivatives(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			Console.WriteLine("F'_A = " + BooleanExpression.FindMininalExpressionInBasis(
+				f.Deriv(BooleanVariable.A).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
+			Console.WriteLine("F'_B = " + BooleanExpression.FindMininalExpressionInBasis(
+				f.Deriv(BooleanVariable.B).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
+			Console.WriteLine("F'_C = " + BooleanExpression.FindMininalExpressionInBasis(
+				f.Deriv(BooleanVariable.C).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
+
+			Console.WriteLine("F''_AB = " + BooleanExpression.FindMininalExpressionInBasis(
+				f.Deriv(BooleanVariable.A, BooleanVariable.B).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
+			Console.WriteLine("F''_BC = " + BooleanExpression.FindMininalExpressionInBasis(
+				f.Deriv(BooleanVariable.B, BooleanVariable.C).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
+			Console.WriteLine("F''_AC = " + BooleanExpression.FindMininalExpressionInBasis(
+				f.Deriv(BooleanVariable.A, BooleanVariable.C).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
+
+			Console.WriteLine("F'''_ABC = " + BooleanExpression.FindMininalExpressionInBasis(
+				f.Deriv(BooleanVariable.A, BooleanVariable.B, BooleanVariable.C).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
+		}
+
+		public static void PrintExpressionsFor2DirDerivatives(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			Console.WriteLine("F'_(A,B) = " + BooleanExpression.FindMininalExpressionInBasis(
+				f.DirectionalDeriv(BooleanVariable.A, BooleanVariable.B).Eval(),
+				AvdoshinBases[0], AvdoshinVars[0]).ToString());
+			Console.WriteLine("F'_(B,C) = " + BooleanExpression.FindMininalExpressionInBasis(
+				f.DirectionalDeriv(BooleanVariable.B, BooleanVariable.C).Eval(),
+				AvdoshinBases[0], AvdoshinVars[0]).ToString());
+			Console.WriteLine("F'_(A,C) = " + BooleanExpression.FindMininalExpressionInBasis(
+				f.DirectionalDeriv(BooleanVariable.A, BooleanVariable.C).Eval(),
+				AvdoshinBases[0], AvdoshinVars[0]).ToString());
+		}
+
+		public static void PrintExpressionsFor3DirDerivatives(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			Console.WriteLine("F'_(A,B,C) = " + BooleanExpression.FindMininalExpressionInBasis(
+				f.DirectionalDeriv(BooleanVariable.A, BooleanVariable.B, BooleanVariable.C).Eval(),
+				AvdoshinBases[0], AvdoshinVars[0]).ToString());
 		}
 	}
 
@@ -428,6 +459,42 @@ namespace SolveAvdoshin
 		public static string PrintOperation(BooleanOperation op)
 		{
 			return OpSymbols[(int)op];
+		}
+
+		public static BooleanExpression FindMininalExpressionInBasis(int n, BooleanOperation[] ops, BooleanVariable[] vars)
+		{
+			var queue = new ImprovisedPriorityQueue<BooleanExpression>(20);
+			var knownTruthTables = new HashSet<byte>();
+			var knownExpressions = new HashSet<BooleanExpression>();
+
+			foreach(var variable in vars) {
+				queue.TryEnqueue(new VarExpression(variable), 1);
+			}
+
+			while(queue.Count != 0) {
+				var curExperession = queue.Dequeue();
+
+				byte truthTable = curExperession.Eval();
+
+				if(knownTruthTables.Contains(truthTable)) {
+					continue;
+				}
+
+				if(curExperession.Eval() == n) {
+					return curExperession;
+				}
+
+				knownExpressions.Add(curExperession);
+				knownTruthTables.Add(truthTable);
+
+				foreach(var anotherExpression in knownExpressions) {
+					foreach(var neighbourExpression in curExperession.CombineWith(anotherExpression, ops)) {
+						queue.TryEnqueue(neighbourExpression, neighbourExpression.getSize());
+					}
+				}
+			}
+
+			throw new CouldntFindExpressionException();
 		}
 	}
 

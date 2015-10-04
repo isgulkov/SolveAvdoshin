@@ -88,7 +88,7 @@ namespace SolveAvdoshin
 			return eqAnswer;
 		}
 
-		public static void Main1(string[] args)
+		public static void Main(string[] args)
 		{
 			int[] coefs = { -1, -1, -1, -1, -1, -1, -1, -1, -1, };	
 
@@ -102,7 +102,33 @@ namespace SolveAvdoshin
 
 				int answer = Solve(coefs);
 
+				Console.WriteLine("\n\n2-3.");
+
 				BooleanFunctions.PrintMinimaInAvdoshinBases(answer);
+
+				Console.WriteLine("\n\n4.\n");
+
+				BooleanFunctions.PrintDerivatives(answer);
+
+				Console.WriteLine("\n\n5.\n");
+
+				BooleanFunctions.PrintExpressionsForDerivatives(answer);
+
+				Console.WriteLine("\n\n6.\n");
+
+				BooleanFunctions.Print2DirectionalDerivatives(answer);
+
+				Console.WriteLine("\n\n7.\n");
+
+				BooleanFunctions.PrintExpressionsFor2DirDerivatives(answer);
+
+				Console.WriteLine("\n\n8.\n");
+
+				BooleanFunctions.Print3DirectionalDerivative(answer);
+
+				Console.WriteLine("\n\n9.\n");
+
+				BooleanFunctions.PrintExpressionsFor3DirDerivatives(answer);
 			}
 			catch(FormatException e) {
 				Console.WriteLine("Osheebka: " + e.Message);
