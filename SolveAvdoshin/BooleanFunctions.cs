@@ -106,101 +106,19 @@ namespace SolveAvdoshin
 			}
 		}
 
-		public static void PrintDerivatives(int n)
+		public static void PrintAllDerivatives(int n)
 		{
-			BooleanFunction f = new BooleanFunction((byte)n);
+			DerivativePrinting.PrintDerivatives(n);
 
-			Console.WriteLine((new BooleanFunction(0x0F)).ToString("A"));
-			Console.WriteLine((new BooleanFunction(0x33)).ToString("B"));
-			Console.WriteLine((new BooleanFunction(0x55)).ToString("C"));
+			DerivativePrinting.PrintExpressionsForDerivatives(n, AvdoshinBases[0], AvdoshinVars[0]);
 
-			Console.WriteLine(f.ToString("F"));
+			DerivativePrinting.Print2DirectionalDerivatives(n);
 
-			Console.WriteLine(f.Deriv(BooleanVariable.A).ToString("F'_A"));
-			Console.WriteLine(f.Deriv(BooleanVariable.B).ToString("F'_B"));
-			Console.WriteLine(f.Deriv(BooleanVariable.C).ToString("F'_C"));
+			DerivativePrinting.PrintExpressionsFor2DirDerivatives(n, AvdoshinBases[0], AvdoshinVars[0]);
 
-			Console.WriteLine(f.Deriv(BooleanVariable.A, BooleanVariable.B).ToString("F''_AB"));
-			Console.WriteLine(f.Deriv(BooleanVariable.B, BooleanVariable.C).ToString("F''_BC"));
-			Console.WriteLine(f.Deriv(BooleanVariable.A, BooleanVariable.C).ToString("F''_AC"));
+			DerivativePrinting.Print3DirectionalDerivative(n);
 
-			Console.WriteLine(f.Deriv(BooleanVariable.A, BooleanVariable.B, BooleanVariable.C)
-				.ToString("F'''_ABC"));
-		}
-
-		public static void Print2DirectionalDerivatives(int n)
-		{
-			BooleanFunction f = new BooleanFunction((byte)n);
-
-			Console.WriteLine((new BooleanFunction(0x0F)).ToString("A"));
-			Console.WriteLine((new BooleanFunction(0x33)).ToString("B"));
-			Console.WriteLine((new BooleanFunction(0x55)).ToString("C"));
-
-			Console.WriteLine(f.ToString("F"));
-
-			Console.WriteLine(f.DirectionalDeriv(BooleanVariable.A, BooleanVariable.B).ToString("F'_(A,B)"));
-			Console.WriteLine(f.DirectionalDeriv(BooleanVariable.B, BooleanVariable.C).ToString("F'_(B,C)"));
-			Console.WriteLine(f.DirectionalDeriv(BooleanVariable.A, BooleanVariable.C).ToString("F'_(A,C)"));
-		}
-
-		public static void Print3DirectionalDerivative(int n)
-		{
-			BooleanFunction f = new BooleanFunction((byte)n);
-
-			Console.WriteLine((new BooleanFunction(0x0F)).ToString("A"));
-			Console.WriteLine((new BooleanFunction(0x33)).ToString("B"));
-			Console.WriteLine((new BooleanFunction(0x55)).ToString("C"));
-
-			Console.WriteLine(f.ToString("F"));
-
-			Console.WriteLine(f.DirectionalDeriv(BooleanVariable.A, BooleanVariable.B, BooleanVariable.C)
-				.ToString("F'_(A,B,C)"));
-		}
-
-		public static void PrintExpressionsForDerivatives(int n)
-		{
-			BooleanFunction f = new BooleanFunction((byte)n);
-
-			Console.WriteLine("F'_A = " + BooleanExpression.FindMininalExpressionInBasis(
-				f.Deriv(BooleanVariable.A).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
-			Console.WriteLine("F'_B = " + BooleanExpression.FindMininalExpressionInBasis(
-				f.Deriv(BooleanVariable.B).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
-			Console.WriteLine("F'_C = " + BooleanExpression.FindMininalExpressionInBasis(
-				f.Deriv(BooleanVariable.C).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
-
-			Console.WriteLine("F''_AB = " + BooleanExpression.FindMininalExpressionInBasis(
-				f.Deriv(BooleanVariable.A, BooleanVariable.B).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
-			Console.WriteLine("F''_BC = " + BooleanExpression.FindMininalExpressionInBasis(
-				f.Deriv(BooleanVariable.B, BooleanVariable.C).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
-			Console.WriteLine("F''_AC = " + BooleanExpression.FindMininalExpressionInBasis(
-				f.Deriv(BooleanVariable.A, BooleanVariable.C).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
-
-			Console.WriteLine("F'''_ABC = " + BooleanExpression.FindMininalExpressionInBasis(
-				f.Deriv(BooleanVariable.A, BooleanVariable.B, BooleanVariable.C).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
-		}
-
-		public static void PrintExpressionsFor2DirDerivatives(int n)
-		{
-			BooleanFunction f = new BooleanFunction((byte)n);
-
-			Console.WriteLine("F'_(A,B) = " + BooleanExpression.FindMininalExpressionInBasis(
-				f.DirectionalDeriv(BooleanVariable.A, BooleanVariable.B).Eval(),
-				AvdoshinBases[0], AvdoshinVars[0]).ToString());
-			Console.WriteLine("F'_(B,C) = " + BooleanExpression.FindMininalExpressionInBasis(
-				f.DirectionalDeriv(BooleanVariable.B, BooleanVariable.C).Eval(),
-				AvdoshinBases[0], AvdoshinVars[0]).ToString());
-			Console.WriteLine("F'_(A,C) = " + BooleanExpression.FindMininalExpressionInBasis(
-				f.DirectionalDeriv(BooleanVariable.A, BooleanVariable.C).Eval(),
-				AvdoshinBases[0], AvdoshinVars[0]).ToString());
-		}
-
-		public static void PrintExpressionsFor3DirDerivatives(int n)
-		{
-			BooleanFunction f = new BooleanFunction((byte)n);
-
-			Console.WriteLine("F'_(A,B,C) = " + BooleanExpression.FindMininalExpressionInBasis(
-				f.DirectionalDeriv(BooleanVariable.A, BooleanVariable.B, BooleanVariable.C).Eval(),
-				AvdoshinBases[0], AvdoshinVars[0]).ToString());
+			DerivativePrinting.PrintExpressionFor3DirDerivative(n, AvdoshinBases[0], AvdoshinVars[0]);
 		}
 	}
 
@@ -374,6 +292,118 @@ namespace SolveAvdoshin
 			}
 
 			return (byte)res;
+		}
+	}
+
+	static class DerivativePrinting
+	{
+		static readonly BooleanVariable[][] VarLists = new BooleanVariable[][] {
+			new BooleanVariable[] { BooleanVariable.A, },
+			new BooleanVariable[] { BooleanVariable.B, },
+			new BooleanVariable[] { BooleanVariable.C, },
+			new BooleanVariable[] { BooleanVariable.A, BooleanVariable.B, },
+			new BooleanVariable[] { BooleanVariable.B, BooleanVariable.C, },
+			new BooleanVariable[] { BooleanVariable.A, BooleanVariable.C, },
+			new BooleanVariable[] { BooleanVariable.A, BooleanVariable.B, BooleanVariable.C, },
+		};
+
+		static readonly string[] DerivStrings = new string[] {
+			"F'_A",
+			"F'_B",
+			"F'_C",
+			"F''_AB",
+			"F''_BC",
+			"F''_AC",
+			"F'''_ABC",
+		};
+
+		static readonly string[] DirDerivStrings = new string[] {
+			"F'_A",
+			"F'_B",
+			"F'_C",
+			"F'_(A,B)",
+			"F'_(B,C)",
+			"F'_(A,C)",
+			"F'_(A,B,C)",
+		};
+
+		public static void PrintJustTruthTable(BooleanFunction f)
+		{
+			Console.WriteLine((new BooleanFunction(0x0F)).ToString("A"));
+			Console.WriteLine((new BooleanFunction(0x33)).ToString("B"));
+			Console.WriteLine((new BooleanFunction(0x55)).ToString("C"));
+
+			Console.WriteLine(f.ToString("F"));
+		}
+
+		public static void PrintDerivatives(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			PrintJustTruthTable(f);
+
+			for(int i = 0; i < 7; i++) {
+				Console.WriteLine(f.Deriv(VarLists[i]).ToString(DerivStrings[i]));
+			}
+
+			Console.WriteLine();
+		}
+
+		public static void Print2DirectionalDerivatives(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			PrintJustTruthTable(f);
+
+			for(int i = 3; i <= 5; i++) {
+				Console.WriteLine(f.DirectionalDeriv(VarLists[6]).ToString(DirDerivStrings[i]));
+			}
+
+			Console.WriteLine();
+		}
+
+		public static void Print3DirectionalDerivative(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			PrintJustTruthTable(f);
+
+			Console.WriteLine(f.DirectionalDeriv(VarLists[6]).ToString(DirDerivStrings[6]));
+
+			Console.WriteLine();
+		}
+
+		public static void PrintExpressionsForDerivatives(int n, BooleanOperation[] ops, BooleanVariable[] vars)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			for(int i = 0; i < 7; i++) {
+				Console.WriteLine(DerivStrings[i] + " = " + BooleanExpression.FindMininalExpressionInBasis(
+					f.Deriv(VarLists[i]).Eval(), ops, vars).ToString());
+			}
+
+			Console.WriteLine();
+		}
+
+		public static void PrintExpressionsFor2DirDerivatives(int n, BooleanOperation[] ops, BooleanVariable[] vars)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			for(int i = 3; i <= 5; i++) {
+				Console.WriteLine(DirDerivStrings[i] + " = " + BooleanExpression.FindMininalExpressionInBasis(f.DirectionalDeriv(VarLists[i]).Eval(), ops, vars).ToString());
+			}
+
+			Console.WriteLine();
+		}
+
+		public static void PrintExpressionFor3DirDerivative(int n, BooleanOperation[] ops, BooleanVariable[] vars)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			Console.WriteLine(DirDerivStrings[6] + " = " + BooleanExpression.FindMininalExpressionInBasis(
+				f.DirectionalDeriv(VarLists[6]).Eval(), ops, vars).ToString());
+
+			Console.WriteLine();
 		}
 	}
 

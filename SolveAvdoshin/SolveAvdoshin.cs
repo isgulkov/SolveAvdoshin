@@ -39,7 +39,7 @@ namespace SolveAvdoshin
 
 		static int[] ConsoleInput()
 		{
-//			return new int[] { 220, 160, 85, 253, 210, 159, 103, 101, 72, };
+			return new int[] { 220, 160, 85, 253, 210, 159, 103, 101, 72, };
 
 			int[] coefs = new int[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, };
 
@@ -83,8 +83,6 @@ namespace SolveAvdoshin
 
 			int eqAnswer = AndXorEquation.SolveEq(coefs);
 
-			Console.WriteLine("\nОтвет: " + eqAnswer);
-
 			return eqAnswer;
 		}
 
@@ -102,33 +100,15 @@ namespace SolveAvdoshin
 
 				int answer = Solve(coefs);
 
+				Console.WriteLine("\n1.\n\nОтвет: " + answer);
+
 				Console.WriteLine("\n\n2-3.");
 
 				BooleanFunctions.PrintMinimaInAvdoshinBases(answer);
 
-				Console.WriteLine("\n\n4.\n");
+				Console.WriteLine("\n\n4-9.\n");
 
-				BooleanFunctions.PrintDerivatives(answer);
-
-				Console.WriteLine("\n\n5.\n");
-
-				BooleanFunctions.PrintExpressionsForDerivatives(answer);
-
-				Console.WriteLine("\n\n6.\n");
-
-				BooleanFunctions.Print2DirectionalDerivatives(answer);
-
-				Console.WriteLine("\n\n7.\n");
-
-				BooleanFunctions.PrintExpressionsFor2DirDerivatives(answer);
-
-				Console.WriteLine("\n\n8.\n");
-
-				BooleanFunctions.Print3DirectionalDerivative(answer);
-
-				Console.WriteLine("\n\n9.\n");
-
-				BooleanFunctions.PrintExpressionsFor3DirDerivatives(answer);
+				BooleanFunctions.PrintAllDerivatives(answer);
 			}
 			catch(FormatException e) {
 				Console.WriteLine("Osheebka: " + e.Message);
