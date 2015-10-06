@@ -109,6 +109,10 @@ namespace SolveAvdoshin
 				Console.WriteLine("\n\n4-9.\n");
 
 				BooleanFunctions.PrintAllDerivatives(answer);
+
+				Console.WriteLine("\n10-13.\n");
+
+				BooleanFunctions.PrintAllRepresentations(answer);
 			}
 			catch(FormatException e) {
 				Console.WriteLine("Osheebka: " + e.Message);
