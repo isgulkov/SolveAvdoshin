@@ -326,9 +326,64 @@ namespace SolveAvdoshin
 			return caption.PadRight(10) + " " + String.Join(" ", digits);
 		}
 
+		static readonly BooleanVariable[][] VarLists = new BooleanVariable[][] {
+			new BooleanVariable[] { },
+			new BooleanVariable[] { BooleanVariable.A, },
+			new BooleanVariable[] { BooleanVariable.B, },
+			new BooleanVariable[] { BooleanVariable.C, },
+			new BooleanVariable[] { BooleanVariable.A, BooleanVariable.B, },
+			new BooleanVariable[] { BooleanVariable.B, BooleanVariable.C, },
+			new BooleanVariable[] { BooleanVariable.A, BooleanVariable.C, },
+			new BooleanVariable[] { BooleanVariable.A, BooleanVariable.B, BooleanVariable.C, },
+		};
+
+		bool VariablePresentAt(int point, BooleanVariable variable)
+		{
+			switch(variable) {
+			case BooleanVariable.A:
+				return ((point >> 2) & 1) == 1;
+			case BooleanVariable.B:
+				return ((point >> 1) & 1) == 1;
+			case BooleanVariable.C:
+				return (point & 1) == 1;
+			default:
+				throw new ArgumentException("VariablePresentAt only works for BooleanVariables A, B and C");
+			}
+		}
+
 		public BooleanExpression GetTailor(int point, BooleanVariable one, BooleanOperation xor, BooleanOperation and)
 		{
-			return new OpExpression(BooleanOperation.NOR, BooleanVariable.A, BooleanVariable.B);
+			BooleanExpression ex = null;
+
+			for(int i = 0; i < 8; i++) { // terms
+				if(((Deriv(VarLists[i]).Eval() >> (7 - point)) & 1) == 1) {
+					BooleanExpression newEx = null;
+
+					if(VarLists[i].Length == 0) {
+						newEx = new VarExpression(one);
+					}
+					else {
+						foreach(var variable in VarLists[i]) {
+							BooleanExpression newVar;
+
+							if(VariablePresentAt(point, variable))
+								newVar = new OpExpression(xor, variable, one);
+							else
+								newVar = new VarExpression(variable);
+
+
+							newEx = newEx == null ? newVar : new OpExpression(and, newEx, newVar);
+						}
+					}
+
+					ex = ex == null ? newEx : new OpExpression(xor, ex, newEx);
+				}
+			}
+
+			ex = ex != null ? ex : new OpExpression(BooleanOperation.NotA,
+				one == BooleanVariable.One ? BooleanVariable.Zero : BooleanVariable.One, BooleanVariable.A);
+
+			return ex;
 		}
 
 		public BooleanFunction DirectionalDeriv(params BooleanVariable[] variables)

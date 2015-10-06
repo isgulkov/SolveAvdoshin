@@ -100,15 +100,15 @@ namespace SolveAvdoshin
 
 				int answer = Solve(coefs);
 
-				Console.WriteLine("\n1.\n\nОтвет: " + answer);
-
-				Console.WriteLine("\n\n2-3.");
-
-				BooleanFunctions.PrintMinimaInAvdoshinBases(answer);
-
-				Console.WriteLine("\n\n4-9.\n");
-
-				BooleanFunctions.PrintAllDerivatives(answer);
+//				Console.WriteLine("\n1.\n\nОтвет: " + answer);
+//
+//				Console.WriteLine("\n\n2-3.");
+//
+//				BooleanFunctions.PrintMinimaInAvdoshinBases(answer);
+//
+//				Console.WriteLine("\n\n4-9.\n");
+//
+//				BooleanFunctions.PrintAllDerivatives(answer);
 
 				Console.WriteLine("\n10-13.\n");
 
