@@ -135,6 +135,93 @@ namespace SolveAvdoshin
 
 			RepresentationPrinting.PrintTailor0EqOr(f);
 		}
+
+		public static void PrintClosedClasses(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+
+		}
+	}
+
+	static class ClosedClassChecking
+	{
+		public static bool CheckConservationZero(BooleanFunction f)
+		{
+			return ((f.Eval() >> 7) & 1) == 0;
+		}
+
+		public static bool CheckConservationOne(BooleanFunction f)
+		{
+			return (f.Eval() & 1) == 1;
+		}
+
+		public static bool CheckSelfDuality(BooleanFunction f)
+		{
+			bool res = true;
+
+			for(int i = 0; i < 8; i++) {
+				if(((f.Eval() >> i) & 1) == ((f.Eval() >> (7 - i)) & 1)) {
+					res = false;
+					break;
+				}
+			}
+
+			return res;
+		}
+
+		static bool AreAdjacent(int a, int b)
+		{
+			bool res = false;
+
+			for(int i = 0; i < 3; i++) {
+				if(((a >> i) & 1) != ((b >> i) & 1)) {
+					if(!res)
+						res = true;
+					else {
+						res = false;
+						break;
+					}
+				}
+			}
+
+			return res;
+		}
+
+		static bool IsGreatherThan(int a, int b)
+		{
+			int onesA = 0, onesB = 0;
+
+			for(int i = 0; i < 3; i++) {
+				onesA += (a >> i) & 1;
+				onesB += (b >> i) & 1;
+			}
+
+			return onesA > onesB;
+		}
+
+		public static bool CheckMonotony(BooleanFunction f)
+		{
+			bool res = true;
+
+			for(int i = 0; i < 8; i++) {
+				for(int j = 0; j < 8; j++) {
+					if(AreAdjacent(i, j) && IsGreatherThan(i, j)) {
+						if(f.EvalAt(i) < f.EvalAt(j)) {
+							res = false;
+							break;
+						}
+					}
+				}
+			}
+
+			return res;
+		}
+
+		public static bool CheckLinearity(BooleanFunction f)
+		{
+			
+		}
 	}
 
 	static class DerivativePrinting
