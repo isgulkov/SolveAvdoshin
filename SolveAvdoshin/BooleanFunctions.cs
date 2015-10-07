@@ -252,8 +252,7 @@ namespace SolveAvdoshin
 
 		public static void PrintMaclauren1XorAnd(BooleanFunction f)
 		{
-			Console.WriteLine("F(A,B,C) = " + 
-				f.GetTailor(0, BooleanVariable.One, BooleanOperation.Xor, BooleanOperation.And));
+			Console.WriteLine("F(A,B,C) = " + f.GetTailorStringXor(0));
 
 			Console.WriteLine();
 		}
@@ -261,8 +260,7 @@ namespace SolveAvdoshin
 		public static void PrintTailor1XorAnd(BooleanFunction f)
 		{
 			for(int i = 0; i < 8; i++) {
-				Console.WriteLine(ReprStrings[i] + ": F(A,B,C) = " +
-					f.GetTailor(i, BooleanVariable.One, BooleanOperation.Xor, BooleanOperation.And));
+				Console.WriteLine(ReprStrings[i] + ": F(A,B,C) = " + f.GetTailorStringXor(i));
 			}
 
 			Console.WriteLine();
@@ -270,8 +268,7 @@ namespace SolveAvdoshin
 
 		public static void PrintMaclauren0EqOr(BooleanFunction f)
 		{
-			Console.WriteLine("F(A,B,C) = " + 
-				f.GetTailor(0, BooleanVariable.Zero, BooleanOperation.Eq, BooleanOperation.Or));
+			Console.WriteLine("F(A,B,C) = " + f.GetTailorStringEq(7));
 
 			Console.WriteLine();
 		}
@@ -279,8 +276,7 @@ namespace SolveAvdoshin
 		public static void PrintTailor0EqOr(BooleanFunction f)
 		{
 			for(int i = 0; i < 8; i++) {
-				Console.WriteLine(ReprStrings[i] + ": F(A,B,C) = " +
-					f.GetTailor(i, BooleanVariable.Zero, BooleanOperation.Eq, BooleanOperation.Or));
+				Console.WriteLine(ReprStrings[i] + ": F(A,B,C) = " + f.GetTailorStringEq(i));
 			}
 
 			Console.WriteLine();
@@ -301,9 +297,9 @@ namespace SolveAvdoshin
 			return TruthTable;
 		}
 
-		public byte EvalAt(int n)
+		public int EvalAt(int n)
 		{
-			return (byte)((TruthTable >> (7 - n)) & 1);
+			return (TruthTable >> (7 - n)) & 1;
 		}
 
 		public new string ToString()
@@ -337,53 +333,82 @@ namespace SolveAvdoshin
 			new BooleanVariable[] { BooleanVariable.A, BooleanVariable.B, BooleanVariable.C, },
 		};
 
-		bool VariablePresentAt(int point, BooleanVariable variable)
+		static readonly string[][] StringLists = new string[][] {
+			new string[] { },
+			new string[] { "A", },
+			new string[] { "B", },
+			new string[] { "C", },
+			new string[] { "A", "B", },
+			new string[] { "B", "C", },
+			new string[] { "A", "C", },
+			new string[] { "A", "B", "C", },
+		};
+
+		bool VariablePresentAt(int point, string variable)
 		{
 			switch(variable) {
-			case BooleanVariable.A:
+			case "A":
 				return ((point >> 2) & 1) == 1;
-			case BooleanVariable.B:
+			case "B":
 				return ((point >> 1) & 1) == 1;
-			case BooleanVariable.C:
+			case "C":
 				return (point & 1) == 1;
 			default:
 				throw new ArgumentException("VariablePresentAt only works for BooleanVariables A, B and C");
 			}
 		}
 
-		public BooleanExpression GetTailor(int point, BooleanVariable one, BooleanOperation xor, BooleanOperation and)
+		public string GetTailorStringXor(int point)
 		{
-			BooleanExpression ex = null;
+			List<string> outerTerms = new List<string>();
 
-			for(int i = 0; i < 8; i++) { // terms
+			if(((Eval() >> (7 - point)) & 1) == 1)
+				outerTerms.Add("1");
+
+			for(int i = 1; i < 8; i++) { // terms
 				if(((Deriv(VarLists[i]).Eval() >> (7 - point)) & 1) == 1) {
-					BooleanExpression newEx = null;
+					List<string> factors = new List<string>();
 
-					if(VarLists[i].Length == 0) {
-						newEx = new VarExpression(one);
-					}
-					else {
-						foreach(var variable in VarLists[i]) {
-							BooleanExpression newVar;
-
-							if(VariablePresentAt(point, variable))
-								newVar = new OpExpression(xor, variable, one);
-							else
-								newVar = new VarExpression(variable);
-
-
-							newEx = newEx == null ? newVar : new OpExpression(and, newEx, newVar);
-						}
+					foreach(var variable in StringLists[i]) {
+						if(VariablePresentAt(point, variable))
+							factors.Add("(" + variable + " ⊕ 1)");
+						else
+							factors.Add(variable);
 					}
 
-					ex = ex == null ? newEx : new OpExpression(xor, ex, newEx);
+					outerTerms.Add(String.Join("", factors));
 				}
 			}
 
-			ex = ex != null ? ex : new OpExpression(BooleanOperation.NotA,
-				one == BooleanVariable.One ? BooleanVariable.Zero : BooleanVariable.One, BooleanVariable.A);
+			return String.Join(" ⊕ ", outerTerms);
+		}
 
-			return ex;
+		public string GetTailorStringEq(int point)
+		{
+			List<string> outerTerms = new List<string>();
+
+			if(((Eval() >> (7 - point)) & 1) == 0)
+				outerTerms.Add("0");
+
+			for(int i = 1; i < 8; i++) { // terms
+				if(((Deriv(VarLists[i]).Eval() >> (7 - point)) & 1) == 1) {
+					List<string> factors = new List<string>();
+
+					foreach(var variable in StringLists[i]) {
+						if(!VariablePresentAt(point, variable))
+							factors.Add("(" + variable + " ≡ 0)");
+						else
+							factors.Add(variable);
+					}
+
+					if(factors.Count == 1)
+						outerTerms.Add(String.Join(" + ", factors));
+					else
+						outerTerms.Add("(" + String.Join(" + ", factors) + ")");
+				}
+			}
+
+			return String.Join(" ≡ ", outerTerms);
 		}
 
 		public BooleanFunction DirectionalDeriv(params BooleanVariable[] variables)
@@ -530,7 +555,7 @@ namespace SolveAvdoshin
 
 	abstract class BooleanExpression
 	{
-		public static readonly string[] OpSymbols = new string[] { "0", "↓", "=/>", "(!A)", "</=", "(!B)", "⨁", "|", "&", "==", "(B)", "<=", "(A)", "=>", "+", "1", };
+		public static readonly string[] OpSymbols = new string[] { "0", "↓", "=/>", "(!A)", "</=", "(!B)", "⨁", "|", "&", "≡", "(B)", "<=", "(A)", "=>", "+", "1", };
 
 		abstract public byte Eval();
 		abstract override public string ToString();

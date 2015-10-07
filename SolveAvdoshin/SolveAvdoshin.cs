@@ -39,7 +39,7 @@ namespace SolveAvdoshin
 
 		static int[] ConsoleInput()
 		{
-			return new int[] { 220, 160, 85, 253, 210, 159, 103, 101, 72, };
+//			return new int[] { 220, 160, 85, 253, 210, 159, 103, 101, 72, };
 
 			int[] coefs = new int[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, };
 
@@ -100,15 +100,15 @@ namespace SolveAvdoshin
 
 				int answer = Solve(coefs);
 
-//				Console.WriteLine("\n1.\n\nОтвет: " + answer);
-//
-//				Console.WriteLine("\n\n2-3.");
-//
-//				BooleanFunctions.PrintMinimaInAvdoshinBases(answer);
-//
-//				Console.WriteLine("\n\n4-9.\n");
-//
-//				BooleanFunctions.PrintAllDerivatives(answer);
+				Console.WriteLine("\n1.\n\nОтвет: " + answer);
+
+				Console.WriteLine("\n\n2-3.");
+
+				BooleanFunctions.PrintMinimaInAvdoshinBases(answer);
+
+				Console.WriteLine("\n\n4-9.\n");
+
+				BooleanFunctions.PrintAllDerivatives(answer);
 
 				Console.WriteLine("\n10-13.\n");
 
