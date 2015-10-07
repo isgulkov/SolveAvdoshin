@@ -113,6 +113,10 @@ namespace SolveAvdoshin
 				Console.WriteLine("\n10-13.\n");
 
 				BooleanFunctions.PrintAllRepresentations(answer);
+
+				Console.WriteLine("\n14.\n");
+
+				BooleanFunctions.PrintClosedClasses(answer);
 			}
 			catch(FormatException e) {
 				Console.WriteLine("Osheebka: " + e.Message);

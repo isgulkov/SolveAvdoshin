@@ -140,34 +140,55 @@ namespace SolveAvdoshin
 		{
 			BooleanFunction f = new BooleanFunction((byte)n);
 
+			ClosedClassPrinting.PrintConservationZero(f);
 
+			ClosedClassPrinting.PrintConservationOne(f);
+
+			ClosedClassPrinting.PrintSelfDuality(f);
+
+			ClosedClassPrinting.PrintMonotony(f);
+
+			ClosedClassPrinting.PrintLinearity(f);
 		}
 	}
 
-	static class ClosedClassChecking
+	static class ClosedClassPrinting
 	{
-		public static bool CheckConservationZero(BooleanFunction f)
+		public static void PrintConservationZero(BooleanFunction f)
 		{
-			return ((f.Eval() >> 7) & 1) == 0;
+			if(f.EvalAt(0) == 0) {
+				Console.WriteLine("F ∈ T_0, т.к. F(0,0,0) = 0");
+			}
+			else {
+				Console.WriteLine("F ∉ T_0, т.к. F(0,0,0) = 1");
+			}
 		}
 
-		public static bool CheckConservationOne(BooleanFunction f)
+		public static void PrintConservationOne(BooleanFunction f)
 		{
-			return (f.Eval() & 1) == 1;
+			if(f.EvalAt(7) == 1) {
+				Console.WriteLine("F ∈ T_1, т.к. F(1,1,1) = 1");
+			}
+			else {
+				Console.WriteLine("F ∉ T_1, т.к. F(1,1,1) = 0");
+			}
 		}
 
-		public static bool CheckSelfDuality(BooleanFunction f)
+		static string PointAsString(int a)
 		{
-			bool res = true;
+			return ((a >> 2) & 1) + "," + ((a >> 1) & 1) + "," + (a & 1);
+		}
 
+		public static void PrintSelfDuality(BooleanFunction f)
+		{
 			for(int i = 0; i < 8; i++) {
-				if(((f.Eval() >> i) & 1) == ((f.Eval() >> (7 - i)) & 1)) {
-					res = false;
-					break;
+				if(f.EvalAt(i) == f.EvalAt(7 - i)) {
+					Console.WriteLine("F ∉ T_*, т.к. F({0}) = F({1}) = {2}", PointAsString(i), PointAsString(7 - i), f.EvalAt(i));
+					return;
 				}
 			}
 
-			return res;
+			Console.WriteLine("F ∈ T_*, т.к. я на всех наборах проверял, честно!");
 		}
 
 		static bool AreAdjacent(int a, int b)
@@ -188,7 +209,7 @@ namespace SolveAvdoshin
 			return res;
 		}
 
-		static bool IsGreatherThan(int a, int b)
+		static bool IsLessThan(int a, int b)
 		{
 			int onesA = 0, onesB = 0;
 
@@ -197,30 +218,38 @@ namespace SolveAvdoshin
 				onesB += (b >> i) & 1;
 			}
 
-			return onesA > onesB;
+			return onesA < onesB;
 		}
 
-		public static bool CheckMonotony(BooleanFunction f)
+		public static void PrintMonotony(BooleanFunction f)
 		{
-			bool res = true;
-
 			for(int i = 0; i < 8; i++) {
 				for(int j = 0; j < 8; j++) {
-					if(AreAdjacent(i, j) && IsGreatherThan(i, j)) {
-						if(f.EvalAt(i) < f.EvalAt(j)) {
-							res = false;
-							break;
-						}
+					if(!AreAdjacent(i, j) || !IsLessThan(i, j))
+						continue;
+					
+					if(f.EvalAt(i) > f.EvalAt(j)) {
+						Console.WriteLine("F ∉ T_<=, т.к. F({0}) > F({1})", PointAsString(i), PointAsString(j));
+						return;
 					}
 				}
 			}
 
-			return res;
+			Console.WriteLine("F ∈ T_<=, т.к. я на всех наборах проверял, честно!");
 		}
 
-		public static bool CheckLinearity(BooleanFunction f)
+		public static void PrintLinearity(BooleanFunction f)
 		{
-			
+			string zhegalkinRep = f.GetTailorStringXor(0);
+
+			foreach(string s in new string[] { "AB", "BC", "AC", "ABC", }) {
+				if(zhegalkinRep.Contains(s)) {
+					Console.WriteLine("F ∉ T_L, т.к. F(A,B,C) = " + zhegalkinRep);
+					return;
+				}
+			}
+
+			Console.WriteLine("F ∈ T_L, т.к. F(A,B,C) = " + zhegalkinRep);
 		}
 	}
 
