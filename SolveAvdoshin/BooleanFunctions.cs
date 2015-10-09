@@ -96,7 +96,8 @@ namespace SolveAvdoshin
 				Console.Write("{0} — {1}", i.ToString("D2"), AvdoshinNames[i].PadRight(18));
 
 				try {
-					var ex = BooleanExpression.FindMininalExpressionInBasis(n, AvdoshinBases[i], AvdoshinVars[i]);
+					var ex = BooleanExpression.FindMininalExpressionInBasis(n, AvdoshinBases[i], AvdoshinVars[i],
+					mode: BooleanExpression.ExpressionSearchMode.CountBlocks);
 
 					Console.WriteLine(ex.ToString());
 				}
@@ -668,7 +669,7 @@ namespace SolveAvdoshin
 		abstract public byte Eval();
 		abstract override public string ToString();
 		abstract public BooleanExpression Clone();
-		abstract public int getSize();
+		abstract public int CountOps();
 
 		public override int GetHashCode()
 		{
@@ -678,6 +679,15 @@ namespace SolveAvdoshin
 		public bool Equals(BooleanExpression obj)
 		{
 			return ToString() == obj.ToString();
+		}
+
+		public abstract HashSet<string> GetSetOfAllBlockStrings();
+
+		public int CountBlocks()
+		{
+			var allBlocks = GetSetOfAllBlockStrings();
+
+			return allBlocks != null ? allBlocks.Count : 0;
 		}
 
 		public IEnumerable<BooleanExpression> CombineWith(BooleanExpression anotherExpression,
@@ -737,7 +747,8 @@ namespace SolveAvdoshin
 			}
 		}
 
-		public static BooleanExpression FindMininalExpressionInBasis(int n, BooleanOperation[] ops, BooleanVariable[] vars)
+		public enum ExpressionSearchMode { CountOps, CountBlocks, };
+		public static BooleanExpression FindMininalExpressionInBasis(int n, BooleanOperation[] ops, BooleanVariable[] vars, ExpressionSearchMode mode = ExpressionSearchMode.CountOps)
 		{
 			var queue = new ImprovisedPriorityQueue<BooleanExpression>(20);
 			var knownTruthTables = new HashSet<byte>();
@@ -765,7 +776,8 @@ namespace SolveAvdoshin
 
 				foreach(var anotherExpression in knownExpressions) {
 					foreach(var neighbourExpression in curExperession.CombineWith(anotherExpression, ops)) {
-						queue.TryEnqueue(neighbourExpression, neighbourExpression.getSize());
+						queue.TryEnqueue(neighbourExpression, mode == ExpressionSearchMode.CountBlocks
+							? neighbourExpression.CountBlocks() : neighbourExpression.CountOps());
 					}
 				}
 			}
@@ -798,9 +810,25 @@ namespace SolveAvdoshin
 			return new OpExpression(Op, Left.Clone(), Right.Clone());
 		}
 
-		public override int getSize()
+		public override int CountOps()
 		{
-			return Left.getSize() + Right.getSize() + 1;
+			return Left.CountOps() + Right.CountOps() + 1;
+		}
+
+		public override HashSet<string> GetSetOfAllBlockStrings()
+		{
+			var allBlocks = new HashSet<string>();
+			allBlocks.Add(ToString());
+
+			var leftBlocks = Left.GetSetOfAllBlockStrings();
+			if(leftBlocks != null)
+				allBlocks.UnionWith(leftBlocks);
+
+			var rightBlocks = Right.GetSetOfAllBlockStrings();
+			if(rightBlocks != null)
+				allBlocks.UnionWith(rightBlocks);
+
+			return allBlocks;
 		}
 
 		public override byte Eval()
@@ -902,9 +930,14 @@ namespace SolveAvdoshin
 			return new VarExpression(Var);
 		}
 
-		public override int getSize()
+		public override int CountOps()
 		{
 			return 0;
+		}
+
+		public override HashSet<string> GetSetOfAllBlockStrings()
+		{
+			return null;
 		}
 
 		public override byte Eval()
