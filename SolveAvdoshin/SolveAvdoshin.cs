@@ -100,9 +100,9 @@ namespace SolveAvdoshin
 
 				int answer = Solve(coefs);
 
-				Console.WriteLine("\n1.\n\nОтвет: " + answer);
+				Console.WriteLine("\n1.\n\nОтвет: " + answer + "\n");
 
-				Console.WriteLine("\n\n2-3.");
+				Console.WriteLine("\n2-3.");
 
 				BooleanFunctions.PrintMinimaInAvdoshinBases(answer);
 
@@ -154,7 +154,10 @@ namespace SolveAvdoshin
 				Console.WriteLine("Osheebka: " + e.Message);
 			}
 			catch(Exception e) {
-				Console.WriteLine("Непойманное исключение: " + e.Message);
+				Console.WriteLine("\nНепойманное исключение: " + e.Message);
+				Console.WriteLine("\n---------------------------------------------------------------");
+				Console.WriteLine("| Report at https://github.com/frnkySila/SolveAvdoshin/issues |");
+				Console.WriteLine("---------------------------------------------------------------");
 				Console.WriteLine("\n" + e.StackTrace);
 			}
 		}
