@@ -153,7 +153,7 @@ namespace SolveAvdoshin
 			catch(FormatException e) {
 				Console.WriteLine("Osheebka: " + e.Message);
 			}
-			catch(Exception e) { // TODO: Разобраться с экссепшенами
+			catch(Exception e) {
 				Console.WriteLine("Непойманное исключение: " + e.Message);
 				Console.WriteLine("\n" + e.StackTrace);
 			}
