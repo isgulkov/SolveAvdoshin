@@ -280,6 +280,13 @@ namespace SolveAvdoshin
 			ClosedClassPrinting.PrintMonotony(f);
 
 			ClosedClassPrinting.PrintLinearity(f);
+
+			Console.WriteLine();
+		}
+
+		public static void PrintRepresentBinariesInF(int n)
+		{
+			Console.WriteLine("Not implemented yet");
 		}
 	}
 

@@ -39,9 +39,11 @@ namespace SolveAvdoshin
 
 		static int[] ConsoleInput()
 		{
-//			return new int[] { 220, 160, 85, 253, 210, 159, 103, 101, 72, };
+			//return new int[] { 220, 160, 85, 253, 210, 159, 103, 101, 72, };
 
 			int[] coefs = new int[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, };
+
+			Console.Clear();
 
 			for(int i = 0; i < 9; i++) {
 				Console.WriteLine(PrintEquation(coefs) + "\n");
@@ -77,7 +79,7 @@ namespace SolveAvdoshin
 			return coefs;
 		}
 
-		public static int Solve(int[] coefs)
+		static int Solve(int[] coefs)
 		{
 			Console.WriteLine(PrintEquation(coefs));
 
@@ -86,80 +88,198 @@ namespace SolveAvdoshin
 			return eqAnswer;
 		}
 
+		enum ExecutionMode { Interactive, CommandLine, NoEquation, };
+
+		static bool ProcessCommandLineArgs(string[] args, out ExecutionMode? mode, out int a, out int b,
+			out int[] coefs, out int n)
+		{
+			coefs = new int[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, };
+			mode = null;
+			a = b = n = -1;
+
+			for(int i = 0; i < args.Length; i++) {
+				switch(args[i]) {
+				case "-i":
+					if(mode != null)
+						return false;
+					
+					mode = ExecutionMode.Interactive;
+
+					break;
+
+				case "-p":
+					if(mode != null)
+						return false;
+					
+					mode = ExecutionMode.CommandLine;
+
+					if(args.Length - i - 1 != 9)
+						return false;
+
+					for(int j = 0; j < 9; j++) {
+						if(!int.TryParse(args[i + j + 1], out coefs[j]))
+							return false;
+						
+						if(!(0 <= coefs[j] && coefs[j] <= 255))
+							return false;
+					}
+
+					i += 9;
+
+					break;
+
+				case "-f":
+					if(mode != null)
+						return false;
+					
+					mode = ExecutionMode.NoEquation;
+
+					if(args.Length - i - 1 != 1)
+						return false;
+					
+					if(!int.TryParse(args[i + 1], out n))
+						return false;
+
+					if(!(0 <= n && n <= 255))
+						return false;
+
+					i += 1;
+					
+					break;
+
+				case "-ex":
+					if(a != -1)
+						return false;
+
+					a = 0;
+
+					if(args.Length - i - 1 < 1)
+						return false;
+
+					if(args[i + 1].Contains("-")) {
+						string[] ab = args[i + 1].Split('-');
+
+						if(!int.TryParse(ab[0], out a) || !int.TryParse(ab[1], out b))
+							return false;
+
+						if(!(0 <= a && a <= 255) || !(0 <= b && b <= 255))
+							return false;
+					}
+					else {
+						if(!int.TryParse(args[i + 1], out a))
+							return false;
+
+						if(!(0 <= a && a <= 255))
+							return false;
+					}
+
+					i += 1;
+
+					break;
+
+				default:
+					int tmp;
+					if(!int.TryParse(args[i], out tmp))
+						return false;
+					break;
+				}
+			}
+
+			if(a == -1) {
+				a = 1;
+				b = 15;
+			}
+
+			return mode != null;
+		}
+
+		static void PrintAnswers(int n, int a, int b)
+		{
+			var functions = new Action<int>[] {
+				BooleanFunctions.PrintMinimaInAvdoshinBases, 
+				BooleanFunctions.PrintDerivatives, 
+				BooleanFunctions.PrintExpressionsForDerivatives, 
+				BooleanFunctions.Print2DirectionalDerivatives, 
+				BooleanFunctions.PrintExpressionsFor2DirDerivatives, 
+				BooleanFunctions.Print3DirectionalDerivative, 
+				BooleanFunctions.PrintExpressionFor3DirDerivative, 
+				BooleanFunctions.PrintMaclauren1XorAnd, 
+				BooleanFunctions.PrintTailor1XorAnd, 
+				BooleanFunctions.PrintMaclauren0EqOr, 
+				BooleanFunctions.PrintTailor0EqOr, 
+				BooleanFunctions.PrintClosedClasses, 
+				BooleanFunctions.PrintRepresentBinariesInF,
+			};
+
+			a = Math.Max(a, 3);
+			b = Math.Max(b, 3);
+
+			for(int i = a; i <= b; i++) {
+				Console.WriteLine("\n{0}", i ==3 ? "2-3." : i + ".\n");
+
+				functions[i - 3](n);
+			}
+		}
+
 		public static void Main(string[] args)
 		{
-			int[] coefs = { -1, -1, -1, -1, -1, -1, -1, -1, -1, };	
+			int[] coefs = { -1, -1, -1, -1, -1, -1, -1, -1, -1, };
 
-			try {
-				try {
-					coefs = ReadArgs(args);
-				}
-				catch(ArgumentNullException) {
+			ExecutionMode? mode;
+			int a, b;
+			int n;
+
+			if(ProcessCommandLineArgs(args, out mode, out a, out b, out coefs, out n)) {
+				switch(mode) {
+				case ExecutionMode.Interactive:
 					coefs = ConsoleInput();
+
+					goto case ExecutionMode.CommandLine;
+
+				case ExecutionMode.CommandLine:
+					n = Solve(coefs);
+
+					Console.WriteLine("\n1.\n\nОтвет: " + n + "\n");
+
+					break;
+				case ExecutionMode.NoEquation:
+					Console.WriteLine("\n1.\n\nДана функция: " + n + "\n");
+
+					break;
 				}
 
-				int answer = Solve(coefs);
+				if(a == -1 && b == -1)
+					PrintAnswers(n, 3, 15);
+				else if(a != -1 && b == -1)
+					PrintAnswers(n, a, a);
+				else
+					PrintAnswers(n, a, b);
 
-				Console.WriteLine("\n1.\n\nОтвет: " + answer + "\n");
-
-				Console.WriteLine("\n2-3.");
-
-				BooleanFunctions.PrintMinimaInAvdoshinBases(answer);
-
-				Console.WriteLine("\n\n4.\n");
-
-				BooleanFunctions.PrintDerivatives(answer);
-
-				Console.WriteLine("\n5.\n");
-
-				BooleanFunctions.PrintExpressionsForDerivatives(answer);
-
-				Console.WriteLine("\n6.\n");
-
-				BooleanFunctions.Print2DirectionalDerivatives(answer);
-
-				Console.WriteLine("\n7.\n");
-
-				BooleanFunctions.PrintExpressionsFor2DirDerivatives(answer);
-
-				Console.WriteLine("\n8.\n");
-
-				BooleanFunctions.Print3DirectionalDerivative(answer);
-
-				Console.WriteLine("\n9.\n");
-
-				BooleanFunctions.PrintExpressionFor3DirDerivative(answer);
-
-				Console.WriteLine("\n10.\n");
-
-				BooleanFunctions.PrintMaclauren1XorAnd(answer);
-
-				Console.WriteLine("\n11.\n");
-
-				BooleanFunctions.PrintTailor1XorAnd(answer);
-
-				Console.WriteLine("\n12.\n");
-
-				BooleanFunctions.PrintMaclauren0EqOr(answer);
-
-				Console.WriteLine("\n13.\n");
-
-				BooleanFunctions.PrintTailor0EqOr(answer);
-
-				Console.WriteLine("\n14.\n");
-
-				BooleanFunctions.PrintClosedClasses(answer);
+				Console.WriteLine();
 			}
-			catch(FormatException e) {
-				Console.WriteLine("Osheebka: " + e.Message);
+			else {
+				Console.WriteLine(
+					"usage: SolveAvdoshin [<options>] [<mode> ...]\n" +
+					"\t-i\t\t\tввод коэффициентов с клавиатуры\n" +
+					"\t-p <a7> ... <a1> <b>\tввод коэффициентов (чисел 9 штук)\n" +
+					"\t-f <n>\t\t\tввод сразу номера функции\n" +
+					"\n" +
+					"\t-ex <a>\t\t\tрешать только <a>-е задание\n" +
+					"\t-ex <a>-<b>\t\tрешать задания с <a> по <b> включительно\n" +
+					"\t\t\t\tПрим.: всего заданий 15");
 			}
-			catch(Exception e) {
-				Console.WriteLine("\nНепойманное исключение: " + e.Message);
-				Console.WriteLine("\n---------------------------------------------------------------");
-				Console.WriteLine("| Report at https://github.com/frnkySila/SolveAvdoshin/issues |");
-				Console.WriteLine("---------------------------------------------------------------");
-				Console.WriteLine("\n" + e.StackTrace);
-			}
+
+
+			/*catch(FormatException e) {
+        Console.WriteLine("Osheebka: " + e.Message);
+      }
+      catch(Exception e) {
+        Console.WriteLine("\nНепойманное исключение: " + e.Message);
+        Console.WriteLine("\n---------------------------------------------------------------");
+        Console.WriteLine("| Report at https://github.com/frnkySila/SolveAvdoshin/issues |");
+        Console.WriteLine("---------------------------------------------------------------");
+        Console.WriteLine("\n" + e.StackTrace);
+      }*/
 		}
 	}
 }
