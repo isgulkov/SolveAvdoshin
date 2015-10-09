@@ -165,7 +165,7 @@ namespace SolveAvdoshin
 			PrintJustTruthTable(f);
 
 			for(int i = 3; i <= 5; i++) {
-				Console.WriteLine(f.DirectionalDeriv(VarLists[6]).ToString(DirDerivStrings[i]));
+				Console.WriteLine(f.DirectionalDeriv(VarLists[i]).ToString(DirDerivStrings[i]));
 			}
 
 			Console.WriteLine();
