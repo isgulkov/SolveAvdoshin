@@ -106,34 +106,165 @@ namespace SolveAvdoshin
 			}
 		}
 
-		public static void PrintAllDerivatives(int n)
+		static readonly BooleanVariable[][] VarLists = new BooleanVariable[][] {
+			new BooleanVariable[] { BooleanVariable.A, },
+			new BooleanVariable[] { BooleanVariable.B, },
+			new BooleanVariable[] { BooleanVariable.C, },
+			new BooleanVariable[] { BooleanVariable.A, BooleanVariable.B, },
+			new BooleanVariable[] { BooleanVariable.B, BooleanVariable.C, },
+			new BooleanVariable[] { BooleanVariable.A, BooleanVariable.C, },
+			new BooleanVariable[] { BooleanVariable.A, BooleanVariable.B, BooleanVariable.C, },
+		};
+
+		static readonly string[] DerivStrings = new string[] {
+			"F'_A",
+			"F'_B",
+			"F'_C",
+			"F''_AB",
+			"F''_BC",
+			"F''_AC",
+			"F'''_ABC",
+		};
+
+		static readonly string[] DirDerivStrings = new string[] {
+			"F'_A",
+			"F'_B",
+			"F'_C",
+			"F'_(A,B)",
+			"F'_(B,C)",
+			"F'_(A,C)",
+			"F'_(A,B,C)",
+		};
+
+		static void PrintJustTruthTable(BooleanFunction f)
 		{
-			BooleanFunction f = new BooleanFunction((byte)n);
+			Console.WriteLine((new BooleanFunction(0x0F)).ToString("A"));
+			Console.WriteLine((new BooleanFunction(0x33)).ToString("B"));
+			Console.WriteLine((new BooleanFunction(0x55)).ToString("C"));
 
-			DerivativePrinting.PrintDerivatives(f);
-
-			DerivativePrinting.PrintExpressionsForDerivatives(f, AvdoshinBases[0], AvdoshinVars[0]);
-
-			DerivativePrinting.Print2DirectionalDerivatives(f);
-
-			DerivativePrinting.PrintExpressionsFor2DirDerivatives(f, AvdoshinBases[0], AvdoshinVars[0]);
-
-			DerivativePrinting.Print3DirectionalDerivative(f);
-
-			DerivativePrinting.PrintExpressionFor3DirDerivative(f, AvdoshinBases[0], AvdoshinVars[0]);
+			Console.WriteLine(f.ToString("F"));
 		}
 
-		public static void PrintAllRepresentations(int n)
+		public static void PrintDerivatives(int n)
 		{
 			BooleanFunction f = new BooleanFunction((byte)n);
 
-			RepresentationPrinting.PrintMaclauren1XorAnd(f);
+			PrintJustTruthTable(f);
 
-			RepresentationPrinting.PrintTailor1XorAnd(f);
+			for(int i = 0; i < 7; i++) {
+				Console.WriteLine(f.Deriv(VarLists[i]).ToString(DerivStrings[i]));
+			}
 
-			RepresentationPrinting.PrintMaclauren0EqOr(f);
+			Console.WriteLine();
+		}
 
-			RepresentationPrinting.PrintTailor0EqOr(f);
+		public static void Print2DirectionalDerivatives(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			PrintJustTruthTable(f);
+
+			for(int i = 3; i <= 5; i++) {
+				Console.WriteLine(f.DirectionalDeriv(VarLists[6]).ToString(DirDerivStrings[i]));
+			}
+
+			Console.WriteLine();
+		}
+
+		public static void Print3DirectionalDerivative(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			PrintJustTruthTable(f);
+
+			Console.WriteLine(f.DirectionalDeriv(VarLists[6]).ToString(DirDerivStrings[6]));
+
+			Console.WriteLine();
+		}
+
+		public static void PrintExpressionsForDerivatives(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			for(int i = 0; i < 7; i++) {
+				Console.WriteLine(DerivStrings[i] + " = " + BooleanExpression.FindMininalExpressionInBasis(
+					f.Deriv(VarLists[i]).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
+			}
+
+			Console.WriteLine();
+		}
+
+		public static void PrintExpressionsFor2DirDerivatives(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			for(int i = 3; i <= 5; i++) {
+				Console.WriteLine(DirDerivStrings[i] + " = " + BooleanExpression.FindMininalExpressionInBasis(
+					f.DirectionalDeriv(VarLists[i]).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
+			}
+
+			Console.WriteLine();
+		}
+
+		public static void PrintExpressionFor3DirDerivative(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			Console.WriteLine(DirDerivStrings[6] + " = " + BooleanExpression.FindMininalExpressionInBasis(
+				f.DirectionalDeriv(VarLists[6]).Eval(), AvdoshinBases[0], AvdoshinVars[0]).ToString());
+
+			Console.WriteLine();
+		}
+
+		static readonly string[] ReprStrings = new string[] {
+			"(0,0,0)",
+			"(0,0,1)",
+			"(0,1,0)",
+			"(0,1,1)",
+			"(1,0,0)",
+			"(1,0,1)",
+			"(1,1,0)",
+			"(1,1,1)",
+		};
+
+		public static void PrintMaclauren1XorAnd(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			Console.WriteLine("F(A,B,C) = " + f.GetTailorStringXor(0));
+
+			Console.WriteLine();
+		}
+
+		public static void PrintTailor1XorAnd(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			for(int i = 0; i < 8; i++) {
+				Console.WriteLine(ReprStrings[i] + ": F(A,B,C) = " + f.GetTailorStringXor(i));
+			}
+
+			Console.WriteLine();
+		}
+
+		public static void PrintMaclauren0EqOr(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			Console.WriteLine("F(A,B,C) = " + f.GetTailorStringEq(7));
+
+			Console.WriteLine();
+		}
+
+		public static void PrintTailor0EqOr(int n)
+		{
+			BooleanFunction f = new BooleanFunction((byte)n);
+
+			for(int i = 0; i < 8; i++) {
+				Console.WriteLine(ReprStrings[i] + ": F(A,B,C) = " + f.GetTailorStringEq(i));
+			}
+
+			Console.WriteLine();
 		}
 
 		public static void PrintClosedClasses(int n)
@@ -250,152 +381,6 @@ namespace SolveAvdoshin
 			}
 
 			Console.WriteLine("F ∈ T_L, т.к. F(A,B,C) = " + zhegalkinRep);
-		}
-	}
-
-	static class DerivativePrinting
-	{
-		static readonly BooleanVariable[][] VarLists = new BooleanVariable[][] {
-			new BooleanVariable[] { BooleanVariable.A, },
-			new BooleanVariable[] { BooleanVariable.B, },
-			new BooleanVariable[] { BooleanVariable.C, },
-			new BooleanVariable[] { BooleanVariable.A, BooleanVariable.B, },
-			new BooleanVariable[] { BooleanVariable.B, BooleanVariable.C, },
-			new BooleanVariable[] { BooleanVariable.A, BooleanVariable.C, },
-			new BooleanVariable[] { BooleanVariable.A, BooleanVariable.B, BooleanVariable.C, },
-		};
-
-		static readonly string[] DerivStrings = new string[] {
-			"F'_A",
-			"F'_B",
-			"F'_C",
-			"F''_AB",
-			"F''_BC",
-			"F''_AC",
-			"F'''_ABC",
-		};
-
-		static readonly string[] DirDerivStrings = new string[] {
-			"F'_A",
-			"F'_B",
-			"F'_C",
-			"F'_(A,B)",
-			"F'_(B,C)",
-			"F'_(A,C)",
-			"F'_(A,B,C)",
-		};
-
-		public static void PrintJustTruthTable(BooleanFunction f)
-		{
-			Console.WriteLine((new BooleanFunction(0x0F)).ToString("A"));
-			Console.WriteLine((new BooleanFunction(0x33)).ToString("B"));
-			Console.WriteLine((new BooleanFunction(0x55)).ToString("C"));
-
-			Console.WriteLine(f.ToString("F"));
-		}
-
-		public static void PrintDerivatives(BooleanFunction f)
-		{
-			PrintJustTruthTable(f);
-
-			for(int i = 0; i < 7; i++) {
-				Console.WriteLine(f.Deriv(VarLists[i]).ToString(DerivStrings[i]));
-			}
-
-			Console.WriteLine();
-		}
-
-		public static void Print2DirectionalDerivatives(BooleanFunction f)
-		{
-			PrintJustTruthTable(f);
-
-			for(int i = 3; i <= 5; i++) {
-				Console.WriteLine(f.DirectionalDeriv(VarLists[6]).ToString(DirDerivStrings[i]));
-			}
-
-			Console.WriteLine();
-		}
-
-		public static void Print3DirectionalDerivative(BooleanFunction f)
-		{
-			PrintJustTruthTable(f);
-
-			Console.WriteLine(f.DirectionalDeriv(VarLists[6]).ToString(DirDerivStrings[6]));
-
-			Console.WriteLine();
-		}
-
-		public static void PrintExpressionsForDerivatives(BooleanFunction f, BooleanOperation[] ops, BooleanVariable[] vars)
-		{
-			for(int i = 0; i < 7; i++) {
-				Console.WriteLine(DerivStrings[i] + " = " + BooleanExpression.FindMininalExpressionInBasis(
-					f.Deriv(VarLists[i]).Eval(), ops, vars).ToString());
-			}
-
-			Console.WriteLine();
-		}
-
-		public static void PrintExpressionsFor2DirDerivatives(BooleanFunction f, BooleanOperation[] ops, BooleanVariable[] vars)
-		{
-			for(int i = 3; i <= 5; i++) {
-				Console.WriteLine(DirDerivStrings[i] + " = " + BooleanExpression.FindMininalExpressionInBasis(f.DirectionalDeriv(VarLists[i]).Eval(), ops, vars).ToString());
-			}
-
-			Console.WriteLine();
-		}
-
-		public static void PrintExpressionFor3DirDerivative(BooleanFunction f, BooleanOperation[] ops, BooleanVariable[] vars)
-		{
-			Console.WriteLine(DirDerivStrings[6] + " = " + BooleanExpression.FindMininalExpressionInBasis(
-				f.DirectionalDeriv(VarLists[6]).Eval(), ops, vars).ToString());
-
-			Console.WriteLine();
-		}
-	}
-
-	static class RepresentationPrinting
-	{
-		static readonly string[] ReprStrings = new string[] {
-			"(0,0,0)",
-			"(0,0,1)",
-			"(0,1,0)",
-			"(0,1,1)",
-			"(1,0,0)",
-			"(1,0,1)",
-			"(1,1,0)",
-			"(1,1,1)",
-		};
-
-		public static void PrintMaclauren1XorAnd(BooleanFunction f)
-		{
-			Console.WriteLine("F(A,B,C) = " + f.GetTailorStringXor(0));
-
-			Console.WriteLine();
-		}
-
-		public static void PrintTailor1XorAnd(BooleanFunction f)
-		{
-			for(int i = 0; i < 8; i++) {
-				Console.WriteLine(ReprStrings[i] + ": F(A,B,C) = " + f.GetTailorStringXor(i));
-			}
-
-			Console.WriteLine();
-		}
-
-		public static void PrintMaclauren0EqOr(BooleanFunction f)
-		{
-			Console.WriteLine("F(A,B,C) = " + f.GetTailorStringEq(7));
-
-			Console.WriteLine();
-		}
-
-		public static void PrintTailor0EqOr(BooleanFunction f)
-		{
-			for(int i = 0; i < 8; i++) {
-				Console.WriteLine(ReprStrings[i] + ": F(A,B,C) = " + f.GetTailorStringEq(i));
-			}
-
-			Console.WriteLine();
 		}
 	}
 

@@ -106,13 +106,45 @@ namespace SolveAvdoshin
 
 				BooleanFunctions.PrintMinimaInAvdoshinBases(answer);
 
-				Console.WriteLine("\n\n4-9.\n");
+				Console.WriteLine("\n\n4.\n");
 
-				BooleanFunctions.PrintAllDerivatives(answer);
+				BooleanFunctions.PrintDerivatives(answer);
 
-				Console.WriteLine("\n10-13.\n");
+				Console.WriteLine("\n5.\n");
 
-				BooleanFunctions.PrintAllRepresentations(answer);
+				BooleanFunctions.PrintExpressionsForDerivatives(answer);
+
+				Console.WriteLine("\n6.\n");
+
+				BooleanFunctions.Print2DirectionalDerivatives(answer);
+
+				Console.WriteLine("\n7.\n");
+
+				BooleanFunctions.PrintExpressionsFor2DirDerivatives(answer);
+
+				Console.WriteLine("\n8.\n");
+
+				BooleanFunctions.Print3DirectionalDerivative(answer);
+
+				Console.WriteLine("\n9.\n");
+
+				BooleanFunctions.PrintExpressionFor3DirDerivative(answer);
+
+				Console.WriteLine("\n10.\n");
+
+				BooleanFunctions.PrintMaclauren1XorAnd(answer);
+
+				Console.WriteLine("\n11.\n");
+
+				BooleanFunctions.PrintTailor1XorAnd(answer);
+
+				Console.WriteLine("\n12.\n");
+
+				BooleanFunctions.PrintMaclauren0EqOr(answer);
+
+				Console.WriteLine("\n13.\n");
+
+				BooleanFunctions.PrintTailor0EqOr(answer);
 
 				Console.WriteLine("\n14.\n");
 
