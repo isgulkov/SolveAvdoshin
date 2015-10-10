@@ -113,7 +113,7 @@ namespace SolveAvdoshin
 					
 					mode = ExecutionMode.CommandLine;
 
-					if(args.Length - i - 1 != 9)
+					if(args.Length - i - 1 < 9)
 						return false;
 
 					for(int j = 0; j < 9; j++) {
@@ -134,7 +134,7 @@ namespace SolveAvdoshin
 					
 					mode = ExecutionMode.NoEquation;
 
-					if(args.Length - i - 1 != 1)
+					if(args.Length - i - 1 < 1)
 						return false;
 					
 					if(!int.TryParse(args[i + 1], out n))
@@ -260,8 +260,8 @@ namespace SolveAvdoshin
 			else {
 				Console.WriteLine(
 					"usage: SolveAvdoshin [<options>] [<mode> ...]\n" +
-					"\t-i\t\t\tввод коэффициентов с клавиатуры\n" +
-					"\t-p <a7> ... <a1> <b>\tввод коэффициентов (чисел 9 штук)\n" +
+					"\t-i\t\t\tввод коэффициентов ур-я с клавиатуры\n" +
+					"\t-p <a7> ... <a1> <b>\tввод коэффициентов ур-я (чисел 9 штук)\n" +
 					"\t-f <n>\t\t\tввод сразу номера функции\n" +
 					"\n" +
 					"\t-ex <a>\t\t\tрешать только <a>-е задание\n" +
