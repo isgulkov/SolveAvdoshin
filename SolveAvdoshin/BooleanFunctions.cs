@@ -108,7 +108,9 @@ namespace SolveAvdoshin
 						}
 						else {
 							foreach(string s in new HashSet<string>(ex.GetSetOfAllBlockStrings())) {
-								Console.WriteLine("\t" + s);
+								if(s != ex.ToString()) {
+									Console.WriteLine("\t" + s);
+								}
 							}
 
 							Console.WriteLine("\tИтого: операций: {0}, блоков: {1}", ex.CountOps(), ex.CountBlocks());
