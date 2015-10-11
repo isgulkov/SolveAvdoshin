@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SolveAvdoshin
 {
@@ -107,7 +108,7 @@ namespace SolveAvdoshin
 							Console.WriteLine("\tСколько операций, столько и блоков");
 						}
 						else {
-							foreach(string s in new HashSet<string>(ex.GetSetOfAllBlockStrings())) {
+							foreach(string s in new HashSet<string>(ex.GetSetOfAllBlockStrings()).OrderByDescending(x => x.Length).Skip(1)) {
 								if(s != ex.ToString()) {
 									Console.WriteLine("\t" + s);
 								}
