@@ -228,10 +228,10 @@ namespace SolveAvdoshin
 				BooleanFunctions.PrintMinimaInAvdoshinBases(n, minOps);
 			}
 
-			for(int i = a + 1; i <= b; i++) {
+			for(int i = Math.Max(a, 4); i <= b; i++) {
 				Console.WriteLine("\n" + i + ".\n");
 
-				functions[i - 3](n);
+				functions[i - 4](n);
 			}
 		}
 

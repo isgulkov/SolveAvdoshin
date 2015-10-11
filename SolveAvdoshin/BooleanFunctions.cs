@@ -322,14 +322,12 @@ namespace SolveAvdoshin
 				if(!representable)
 					continue;
 
-				Console.Write((new OpExpression(t.Item1, BooleanVariable.A, BooleanVariable.B)).ToString() + " = ");
-
 				try {
-					Console.WriteLine(TertiaryOpExpression.FindMininalExpressionForBinary(t.Item1,
-						new BooleanFunction((byte)n)));
+					Console.WriteLine((new OpExpression(t.Item1, BooleanVariable.A, BooleanVariable.B)).ToString() + " = " +
+						TertiaryOpExpression.FindMininalExpressionForBinary(t.Item1, new BooleanFunction((byte)n)));
 				}
 				catch(CouldntFindExpressionException) {
-					Console.WriteLine("не нашлось");
+					
 				}
 			}
 		}
