@@ -37,6 +37,7 @@
     <Compile Include="AndXorEquation.cs" />
     <Compile Include="SolveAvdoshin.cs" />
     <Compile Include="BooleanFunctions.cs" />
+    <Compile Include="DataStructures.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

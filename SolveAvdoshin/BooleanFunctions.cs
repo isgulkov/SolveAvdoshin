@@ -272,44 +272,217 @@ namespace SolveAvdoshin
 		{
 			BooleanFunction f = new BooleanFunction((byte)n);
 
-			ClosedClassPrinting.PrintConservationZero(f);
+			PostClosedClasses.CheckConservationZero(f, true);
 
-			ClosedClassPrinting.PrintConservationOne(f);
+			PostClosedClasses.CheckConservationOne(f, true);
 
-			ClosedClassPrinting.PrintSelfDuality(f);
+			PostClosedClasses.CheckSelfDuality(f, true);
 
-			ClosedClassPrinting.PrintMonotony(f);
+			PostClosedClasses.CheckMonotony(f, true);
 
-			ClosedClassPrinting.PrintLinearity(f);
+			PostClosedClasses.CheckLinearity(f, true);
 
 			Console.WriteLine();
 		}
 
+		static readonly Tuple<BooleanOperation, bool[]>[] BinariesAndClasses = {
+			new Tuple<BooleanOperation, bool[]>(BooleanOperation.Zero, new bool[5] { true, false, false, true, true, }),
+			new Tuple<BooleanOperation, bool[]>(BooleanOperation.And, new bool[5] { true, true, false, true, false, }),
+			new Tuple<BooleanOperation, bool[]>(BooleanOperation.CoImp, new bool[5] { true, false, false, false, false, }),
+//			new Tuple<BooleanOperation, bool[]>(BooleanOperation.A, new bool[5] { false, false, false, false, false, } ),
+//			new Tuple<BooleanOperation, bool[]>(BooleanOperation.BCoImp, new bool[5] { false, false, false, false, false, } ),
+//			new Tuple<BooleanOperation, bool[]>(BooleanOperation.B, new bool[5] { false, false, false, false, false, } ),
+			new Tuple<BooleanOperation, bool[]>(BooleanOperation.Xor, new bool[5] { true, false, false, false, true, }),
+			new Tuple<BooleanOperation, bool[]>(BooleanOperation.Or, new bool[5] { true, true, false, true, false, }),
+			new Tuple<BooleanOperation, bool[]>(BooleanOperation.NOR, new bool[5] { false, false, false, false, false, }),
+			new Tuple<BooleanOperation, bool[]>(BooleanOperation.Eq, new bool[5] { false, true, false, false, true, }),
+//			new Tuple<BooleanOperation, bool[]>(BooleanOperation.NotB, new bool[5] { false, false, false, false, false, } ),
+//			new Tuple<BooleanOperation, bool[]>(BooleanOperation.BImp, new bool[5] { false, false, false, false, false, } ),
+			new Tuple<BooleanOperation, bool[]>(BooleanOperation.NotA, new bool[5] { false, false, true, false, true, }),
+			new Tuple<BooleanOperation, bool[]>(BooleanOperation.Imp, new bool[5] { false, true, false, false, false, }),
+			new Tuple<BooleanOperation, bool[]>(BooleanOperation.NAND, new bool[5] { false, false, false, false, false, }),
+			new Tuple<BooleanOperation, bool[]>(BooleanOperation.One, new bool[5] { false, true, false, true, true, }),
+		};
+
 		public static void PrintRepresentBinariesInF(int n)
 		{
-			Console.WriteLine("Not implemented yet");
+			bool[] functionClasses = PostClosedClasses.GetFunctionClasses(new BooleanFunction((byte)n));
+
+			foreach(var t in BinariesAndClasses) {
+				bool representable = true;
+
+				for(int i = 0; i < 5; i++) {
+					if(functionClasses[i] && !t.Item2[i]) {
+						representable = false;
+						break;
+					}
+				}
+
+				if(!representable)
+					continue;
+
+				Console.Write((new OpExpression(t.Item1, BooleanVariable.A, BooleanVariable.B)).ToString() + " = ");
+
+				try {
+					Console.WriteLine(TertiaryOpExpression.FindMininalExpressionForBinary(t.Item1,
+						new BooleanFunction((byte)n)));
+				}
+				catch(CouldntFindExpressionException) {
+					Console.WriteLine("не нашлось");
+				}
+			}
 		}
 	}
 
-	static class ClosedClassPrinting
+	class TertiaryOpExpression : BooleanExpression
 	{
-		public static void PrintConservationZero(BooleanFunction f)
+		BooleanFunction F;
+		BooleanExpression First, Second, Third;
+
+		public TertiaryOpExpression(BooleanFunction f, BooleanExpression first, BooleanExpression second, BooleanExpression third)
+		{
+			F = f;
+			First = first;
+			Second = second;
+			Third = third;
+		}
+
+		public override bool Equals(object obj)
+		{
+			return base.Equals(obj);
+		}
+
+		public override int GetHashCode()
+		{
+			return base.GetHashCode();
+		}
+
+		public override string ToString()
+		{
+			return String.Format("F({0},{1},{2})", First.ToString(), Second.ToString(), Third.ToString());
+		}
+
+		public override int CountOps()
+		{
+			return 1 + First.CountOps() + Second.CountOps() + Third.CountOps();
+		}
+
+		public override BooleanExpression Clone()
+		{
+			return new TertiaryOpExpression(F, First, Second, Third);
+		}
+
+		public override byte Eval()
+		{
+			int res = 0;
+
+			for(int i = 0; i < 8; i++) {
+				res *= 2;
+				res += F.EvalAt(First.EvalAt(i) * 4 + Second.EvalAt(i) * 2 + Third.EvalAt(i));
+			}
+
+			return (byte)res;
+		}
+
+		public override HashSet<string> GetSetOfAllBlockStrings()
+		{
+			throw new NotImplementedException();
+		}
+
+		static public IEnumerable<TertiaryOpExpression> CombineTertiary(BooleanFunction f,
+			BooleanExpression firstExpression, BooleanExpression anotherExpression, BooleanExpression thirdExpression)
+		{
+			yield return new TertiaryOpExpression(f, firstExpression.Clone(), anotherExpression.Clone(),
+				thirdExpression.Clone());
+			yield return new TertiaryOpExpression(f, firstExpression.Clone(), thirdExpression.Clone(),
+				anotherExpression.Clone());
+			yield return new TertiaryOpExpression(f, anotherExpression.Clone(), firstExpression.Clone(),
+				thirdExpression.Clone());
+			yield return new TertiaryOpExpression(f, thirdExpression.Clone(), firstExpression.Clone(),
+				anotherExpression.Clone());
+			yield return new TertiaryOpExpression(f, anotherExpression.Clone(), thirdExpression.Clone(),
+				firstExpression.Clone());
+			yield return new TertiaryOpExpression(f, thirdExpression.Clone(), anotherExpression.Clone(),
+				firstExpression.Clone());
+		}
+
+		public static BooleanExpression FindMininalExpressionForBinary(BooleanOperation binary, BooleanFunction f)
+		{
+			var queue = new ImprovisedPriorityQueue<BooleanExpression>(20);
+			var knownTruthTables = new HashSet<byte>();
+			var knownExpressions = new HashSet<BooleanExpression>();
+
+			var targetExpression = new OpExpression(binary, BooleanVariable.A, BooleanVariable.B);
+
+			foreach(var variable in new BooleanVariable[] { BooleanVariable.A, BooleanVariable.B, }) {
+				queue.TryEnqueue(new VarExpression(variable), 1);
+			}
+
+			while(queue.Count != 0) {
+				var curExperession = queue.Dequeue();
+
+				byte truthTable = curExperession.Eval();
+
+				if(knownTruthTables.Contains(truthTable)) {
+					continue;
+				}
+
+				if((curExperession.Eval() & 0xAA) == (targetExpression.Eval() & 0xAA)) {
+					return curExperession;
+				}
+
+				knownExpressions.Add(curExperession);
+				knownTruthTables.Add(truthTable);
+
+				foreach(var anotherExpression in knownExpressions) {
+					foreach(var thirdExpression in knownExpressions) {
+						foreach(var neighbourExpression in CombineTertiary(f, curExperession, anotherExpression, thirdExpression)) {
+							queue.TryEnqueue(neighbourExpression, neighbourExpression.CountOps());
+						}
+					}
+				}
+			}
+
+			throw new CouldntFindExpressionException();
+		}
+	}
+
+	static class PostClosedClasses
+	{
+		public static bool[] GetFunctionClasses(BooleanFunction f)
+		{
+			return new bool[] { CheckConservationZero(f), CheckConservationOne(f), CheckSelfDuality(f), CheckMonotony(f), CheckLinearity(f), };
+		}
+
+		public static bool CheckConservationZero(BooleanFunction f, bool verbose = false)
 		{
 			if(f.EvalAt(0) == 0) {
-				Console.WriteLine("F ∈ T_0, т.к. F(0,0,0) = 0");
+				if(verbose)
+					Console.WriteLine("F ∈ T_0, т.к. F(0,0,0) = 0");
+				
+				return true;
 			}
 			else {
-				Console.WriteLine("F ∉ T_0, т.к. F(0,0,0) = 1");
+				if(verbose)
+					Console.WriteLine("F ∉ T_0, т.к. F(0,0,0) = 1");
+				
+				return false;
 			}
 		}
 
-		public static void PrintConservationOne(BooleanFunction f)
+		public static bool CheckConservationOne(BooleanFunction f, bool verbose = false)
 		{
 			if(f.EvalAt(7) == 1) {
-				Console.WriteLine("F ∈ T_1, т.к. F(1,1,1) = 1");
+				if(verbose)
+					Console.WriteLine("F ∈ T_1, т.к. F(1,1,1) = 1");
+				
+				return true;
 			}
 			else {
-				Console.WriteLine("F ∉ T_1, т.к. F(1,1,1) = 0");
+				if(verbose)
+					Console.WriteLine("F ∉ T_1, т.к. F(1,1,1) = 0");
+				
+				return false;
 			}
 		}
 
@@ -318,16 +491,21 @@ namespace SolveAvdoshin
 			return ((a >> 2) & 1) + "," + ((a >> 1) & 1) + "," + (a & 1);
 		}
 
-		public static void PrintSelfDuality(BooleanFunction f)
+		public static bool CheckSelfDuality(BooleanFunction f, bool verbose = false)
 		{
 			for(int i = 0; i < 8; i++) {
 				if(f.EvalAt(i) == f.EvalAt(7 - i)) {
-					Console.WriteLine("F ∉ T_*, т.к. F({0}) = F({1}) = {2}", PointAsString(i), PointAsString(7 - i), f.EvalAt(i));
-					return;
+					if(verbose)
+						Console.WriteLine("F ∉ T_*, т.к. F({0}) = F({1}) = {2}", PointAsString(i), PointAsString(7 - i), f.EvalAt(i));
+					
+					return false;
 				}
 			}
 
-			Console.WriteLine("F ∈ T_*, т.к. я на всех наборах проверял, честно!");
+			if(verbose)
+				Console.WriteLine("F ∈ T_*, т.к. я на всех наборах проверял, честно!");
+			
+			return true;
 		}
 
 		static bool AreAdjacent(int a, int b)
@@ -360,7 +538,7 @@ namespace SolveAvdoshin
 			return onesA < onesB;
 		}
 
-		public static void PrintMonotony(BooleanFunction f)
+		public static bool CheckMonotony(BooleanFunction f, bool verbose = false)
 		{
 			for(int i = 0; i < 8; i++) {
 				for(int j = 0; j < 8; j++) {
@@ -368,27 +546,37 @@ namespace SolveAvdoshin
 						continue;
 					
 					if(f.EvalAt(i) > f.EvalAt(j)) {
-						Console.WriteLine("F ∉ T_<=, т.к. F({0}) > F({1})", PointAsString(i), PointAsString(j));
-						return;
+						if(verbose)
+							Console.WriteLine("F ∉ T_<=, т.к. F({0}) > F({1})", PointAsString(i), PointAsString(j));
+						
+						return false;
 					}
 				}
 			}
 
-			Console.WriteLine("F ∈ T_<=, т.к. я на всех наборах проверял, честно!");
+			if(verbose)
+				Console.WriteLine("F ∈ T_<=, т.к. я на всех наборах проверял, честно!");
+			
+			return true;
 		}
 
-		public static void PrintLinearity(BooleanFunction f)
+		public static bool CheckLinearity(BooleanFunction f, bool verbose = false)
 		{
 			string zhegalkinRep = f.GetTailorStringXor(0);
 
 			foreach(string s in new string[] { "AB", "BC", "AC", "ABC", }) {
 				if(zhegalkinRep.Contains(s)) {
-					Console.WriteLine("F ∉ T_L, т.к. F(A,B,C) = " + zhegalkinRep);
-					return;
+					if(verbose)
+						Console.WriteLine("F ∉ T_L, т.к. F(A,B,C) = " + zhegalkinRep);
+					
+					return false;
 				}
 			}
 
-			Console.WriteLine("F ∈ T_L, т.к. F(A,B,C) = " + zhegalkinRep);
+			if(verbose)
+				Console.WriteLine("F ∈ T_L, т.к. F(A,B,C) = " + zhegalkinRep);
+			
+			return true;
 		}
 	}
 
@@ -671,6 +859,11 @@ namespace SolveAvdoshin
 		abstract public BooleanExpression Clone();
 		abstract public int CountOps();
 
+		public int EvalAt(int i)
+		{
+			return (Eval() >> (7 - i)) & 1;
+		}
+
 		public override int GetHashCode()
 		{
 			return ToString().GetHashCode();
@@ -704,51 +897,9 @@ namespace SolveAvdoshin
 			return OpSymbols[(int)op];
 		}
 
-		class ImprovisedPriorityQueue<T>
-		{
-			public int Capacity, Count;
-			Queue<T>[] Queues;
-
-			public ImprovisedPriorityQueue(int capacity)
-			{
-				Capacity = capacity;
-				Count = 0;
-
-				Queues = new Queue<T>[capacity + 1];
-
-				for(int i = 1; i <= capacity; i++) {
-					Queues[i] = new Queue<T>();
-				}
-			}
-
-			public bool TryEnqueue(T item, int priority)
-			{
-				if(priority < 1 || priority > Capacity)
-					return false;
-
-				Count += 1;
-				Queues[priority].Enqueue(item);
-				return true;
-			}
-
-			public T Dequeue()
-			{
-				if(Count == 0)
-					throw new Exception("ImprovisedPriorityQueue is empty");
-
-				for(int i = 1; i <= Capacity; i++) {
-					if(Queues[i].Count != 0) {
-						Count -= 1;
-						return Queues[i].Dequeue();
-					}
-				}
-
-				throw new Exception("ImprovisedPriorityQueue is empty");
-			}
-		}
-
 		public enum ExpressionSearchMode { CountOps, CountBlocks, };
-		public static BooleanExpression FindMininalExpressionInBasis(int n, BooleanOperation[] ops, BooleanVariable[] vars, ExpressionSearchMode mode = ExpressionSearchMode.CountOps)
+		public static BooleanExpression FindMininalExpressionInBasis(int n, BooleanOperation[] ops,
+			BooleanVariable[] vars, ExpressionSearchMode mode = ExpressionSearchMode.CountOps)
 		{
 			var queue = new ImprovisedPriorityQueue<BooleanExpression>(20);
 			var knownTruthTables = new HashSet<byte>();
