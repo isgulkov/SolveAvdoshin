@@ -385,7 +385,7 @@ namespace SolveAvdoshin
 			return (byte)res;
 		}
 
-		public override HashSet<string> GetSetOfAllBlockStrings()
+		public override IEnumerable<string> GetSetOfAllBlockStrings()
 		{
 			throw new NotImplementedException();
 		}
@@ -875,13 +875,17 @@ namespace SolveAvdoshin
 			return ToString() == obj.ToString();
 		}
 
-		public abstract HashSet<string> GetSetOfAllBlockStrings();
+		public abstract IEnumerable<string> GetSetOfAllBlockStrings();
 
 		public int CountBlocks()
 		{
-			var allBlocks = GetSetOfAllBlockStrings();
+			var allBlocks = new HashSet<string>();
 
-			return allBlocks != null ? allBlocks.Count : 0;
+			foreach(string s in GetSetOfAllBlockStrings()) {
+				allBlocks.Add(s);
+			}
+
+			return allBlocks.Count;
 		}
 
 		public IEnumerable<BooleanExpression> CombineWith(BooleanExpression anotherExpression,
@@ -967,20 +971,17 @@ namespace SolveAvdoshin
 			return Left.CountOps() + Right.CountOps() + 1;
 		}
 
-		public override HashSet<string> GetSetOfAllBlockStrings()
+		public override IEnumerable<string> GetSetOfAllBlockStrings()
 		{
-			var allBlocks = new HashSet<string>();
-			allBlocks.Add(ToString());
+			yield return ToString();
 
-			var leftBlocks = Left.GetSetOfAllBlockStrings();
-			if(leftBlocks != null)
-				allBlocks.UnionWith(leftBlocks);
+			foreach(string s in Left.GetSetOfAllBlockStrings()) {
+				yield return s;
+			}
 
-			var rightBlocks = Right.GetSetOfAllBlockStrings();
-			if(rightBlocks != null)
-				allBlocks.UnionWith(rightBlocks);
-
-			return allBlocks;
+			foreach(string s in Right.GetSetOfAllBlockStrings()) {
+				yield return s;
+			}
 		}
 
 		public override byte Eval()
@@ -1087,9 +1088,9 @@ namespace SolveAvdoshin
 			return 0;
 		}
 
-		public override HashSet<string> GetSetOfAllBlockStrings()
+		public override IEnumerable<string> GetSetOfAllBlockStrings()
 		{
-			return null;
+			yield break;
 		}
 
 		public override byte Eval()
