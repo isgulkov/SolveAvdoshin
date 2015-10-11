@@ -91,12 +91,12 @@ namespace SolveAvdoshin
 		enum ExecutionMode { Interactive, CommandLine, NoEquation, };
 
 		static bool ProcessCommandLineArgs(string[] args, out ExecutionMode? mode, out int a, out int b,
-			out int[] coefs, out int n, out bool minOps)
+			out int[] coefs, out int n, out bool minOps, out bool showBlocks)
 		{
 			coefs = new int[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, };
 			mode = null;
 			a = b = n = -1;
-			minOps = false;
+			minOps = showBlocks = false;
 
 			for(int i = 0; i < args.Length; i++) {
 				switch(args[i]) {
@@ -185,6 +185,14 @@ namespace SolveAvdoshin
 					minOps = true;
 
 					break;
+				
+				case "-sb":
+					if(showBlocks)
+						return false;
+
+					showBlocks = true;
+
+					break;
 
 				default:
 					int tmp;
@@ -202,7 +210,7 @@ namespace SolveAvdoshin
 			return mode != null;
 		}
 
-		static void PrintAnswers(int n, int a, int b, bool minOps)
+		static void PrintAnswers(int n, int a, int b, bool minOps, bool showBlocks)
 		{
 			var functions = new Action<int>[] {
 				BooleanFunctions.PrintDerivatives, 
@@ -225,7 +233,7 @@ namespace SolveAvdoshin
 			if(a <= 3) {
 				Console.WriteLine("\n2-3.\n");
 
-				BooleanFunctions.PrintMinimaInAvdoshinBases(n, minOps);
+				BooleanFunctions.PrintMinimaInAvdoshinBases(n, minOps, showBlocks);
 			}
 
 			for(int i = Math.Max(a, 4); i <= b; i++) {
@@ -242,9 +250,9 @@ namespace SolveAvdoshin
 			ExecutionMode? mode;
 			int a, b;
 			int n;
-			bool minOps;
+			bool minOps, showBlocks;
 
-			if(ProcessCommandLineArgs(args, out mode, out a, out b, out coefs, out n, out minOps)) {
+			if(ProcessCommandLineArgs(args, out mode, out a, out b, out coefs, out n, out minOps, out showBlocks)) {
 				switch(mode) {
 				case ExecutionMode.Interactive:
 					coefs = ConsoleInput();
@@ -264,11 +272,11 @@ namespace SolveAvdoshin
 				}
 
 				if(a == -1 && b == -1)
-					PrintAnswers(n, 3, 15, minOps);
+					PrintAnswers(n, 3, 15, minOps, showBlocks);
 				else if(a != -1 && b == -1)
-					PrintAnswers(n, a, a, minOps);
+					PrintAnswers(n, a, a, minOps, showBlocks);
 				else
-					PrintAnswers(n, a, b, minOps);
+					PrintAnswers(n, a, b, minOps, showBlocks);
 
 				Console.WriteLine();
 			}
@@ -281,8 +289,10 @@ namespace SolveAvdoshin
 					"\n" +
 					"\t-ex <a>\t\t\tрешать только <a>-е задание\n" +
 					"\t-ex <a>-<b>\t\tрешать задания с <a> по <b> включительно\n" +
-					"\t\t\t\t(прим.: всего заданий 15)\n" +
-					"\t-mo \t\t\tминимизировать выражения по кол-ву операций\n");
+					"\t\t\t\t(прим.: всего заданий 15)\n\n" +
+					"\t\tопции для 2-3 заданий:\n" +
+					"\t-mo \t\t\tминимизировать выражения по кол-ву операций\n" +
+					"\t-sb \t\t\tпоказывать кол-во блоков и сами блоки\n");
 			}
 		}
 	}
