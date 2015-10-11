@@ -91,11 +91,12 @@ namespace SolveAvdoshin
 		enum ExecutionMode { Interactive, CommandLine, NoEquation, };
 
 		static bool ProcessCommandLineArgs(string[] args, out ExecutionMode? mode, out int a, out int b,
-			out int[] coefs, out int n)
+			out int[] coefs, out int n, out bool minOps)
 		{
 			coefs = new int[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, };
 			mode = null;
 			a = b = n = -1;
+			minOps = false;
 
 			for(int i = 0; i < args.Length; i++) {
 				switch(args[i]) {
@@ -176,6 +177,14 @@ namespace SolveAvdoshin
 					i += 1;
 
 					break;
+				
+				case "-mo":
+					if(minOps)
+						return false;
+
+					minOps = true;
+
+					break;
 
 				default:
 					int tmp;
@@ -193,10 +202,9 @@ namespace SolveAvdoshin
 			return mode != null;
 		}
 
-		static void PrintAnswers(int n, int a, int b)
+		static void PrintAnswers(int n, int a, int b, bool minOps)
 		{
 			var functions = new Action<int>[] {
-				BooleanFunctions.PrintMinimaInAvdoshinBases, 
 				BooleanFunctions.PrintDerivatives, 
 				BooleanFunctions.PrintExpressionsForDerivatives, 
 				BooleanFunctions.Print2DirectionalDerivatives, 
@@ -214,8 +222,14 @@ namespace SolveAvdoshin
 			a = Math.Max(a, 3);
 			b = Math.Max(b, 3);
 
-			for(int i = a; i <= b; i++) {
-				Console.WriteLine("\n{0}", i ==3 ? "2-3." : i + ".\n");
+			if(a <= 3) {
+				Console.WriteLine("\n2-3.\n");
+
+				BooleanFunctions.PrintMinimaInAvdoshinBases(n, minOps);
+			}
+
+			for(int i = a + 1; i <= b; i++) {
+				Console.WriteLine("\n" + i + ".\n");
 
 				functions[i - 3](n);
 			}
@@ -228,8 +242,9 @@ namespace SolveAvdoshin
 			ExecutionMode? mode;
 			int a, b;
 			int n;
+			bool minOps;
 
-			if(ProcessCommandLineArgs(args, out mode, out a, out b, out coefs, out n)) {
+			if(ProcessCommandLineArgs(args, out mode, out a, out b, out coefs, out n, out minOps)) {
 				switch(mode) {
 				case ExecutionMode.Interactive:
 					coefs = ConsoleInput();
@@ -249,11 +264,11 @@ namespace SolveAvdoshin
 				}
 
 				if(a == -1 && b == -1)
-					PrintAnswers(n, 3, 15);
+					PrintAnswers(n, 3, 15, minOps);
 				else if(a != -1 && b == -1)
-					PrintAnswers(n, a, a);
+					PrintAnswers(n, a, a, minOps);
 				else
-					PrintAnswers(n, a, b);
+					PrintAnswers(n, a, b, minOps);
 
 				Console.WriteLine();
 			}
@@ -266,20 +281,9 @@ namespace SolveAvdoshin
 					"\n" +
 					"\t-ex <a>\t\t\tрешать только <a>-е задание\n" +
 					"\t-ex <a>-<b>\t\tрешать задания с <a> по <b> включительно\n" +
-					"\t\t\t\t(прим.: всего заданий 15)");
+					"\t\t\t\t(прим.: всего заданий 15)\n" +
+					"\t-mo \t\t\tминимизировать выражения по кол-ву операций\n");
 			}
-
-
-			/*catch(FormatException e) {
-        Console.WriteLine("Osheebka: " + e.Message);
-      }
-      catch(Exception e) {
-        Console.WriteLine("\nНепойманное исключение: " + e.Message);
-        Console.WriteLine("\n---------------------------------------------------------------");
-        Console.WriteLine("| Report at https://github.com/frnkySila/SolveAvdoshin/issues |");
-        Console.WriteLine("---------------------------------------------------------------");
-        Console.WriteLine("\n" + e.StackTrace);
-      }*/
 		}
 	}
 }

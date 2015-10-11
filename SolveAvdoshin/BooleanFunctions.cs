@@ -85,7 +85,7 @@ namespace SolveAvdoshin
 			new BooleanVariable[] { BooleanVariable.A, BooleanVariable.B, BooleanVariable.C, },
 		};
 
-		public static void PrintMinimaInAvdoshinBases(int n)
+		public static void PrintMinimaInAvdoshinBases(int n, bool minOps)
 		{
 			Console.WriteLine("\nМинимальные представления f_" + n + " в базисах (для рисования в винлогике):");
 
@@ -97,7 +97,8 @@ namespace SolveAvdoshin
 
 				try {
 					var ex = BooleanExpression.FindMininalExpressionInBasis(n, AvdoshinBases[i], AvdoshinVars[i],
-					mode: BooleanExpression.ExpressionSearchMode.CountBlocks);
+					mode: minOps ? BooleanExpression.ExpressionSearchMode.CountOps :
+						BooleanExpression.ExpressionSearchMode.CountBlocks);
 
 					Console.WriteLine(ex.ToString());
 				}
