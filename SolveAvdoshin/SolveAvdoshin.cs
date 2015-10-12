@@ -91,12 +91,12 @@ namespace SolveAvdoshin
 		enum ExecutionMode { Interactive, CommandLine, NoEquation, };
 
 		static bool ProcessCommandLineArgs(string[] args, out ExecutionMode? mode, out int a, out int b,
-			out int[] coefs, out int n, out bool minOps, out bool showBlocks)
+			out int[] coefs, out int n, out bool minOps, out bool showBlocks, out bool noLookBack, out bool verboseSystem)
 		{
 			coefs = new int[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, };
 			mode = null;
 			a = b = n = -1;
-			minOps = showBlocks = false;
+			minOps = showBlocks = noLookBack = verboseSystem = false;
 
 			for(int i = 0; i < args.Length; i++) {
 				switch(args[i]) {
@@ -185,12 +185,28 @@ namespace SolveAvdoshin
 					minOps = true;
 
 					break;
-				
+
 				case "-sb":
 					if(showBlocks)
 						return false;
 
 					showBlocks = true;
+
+					break;
+
+				case "-vs":
+					if(verboseSystem)
+						return false;
+
+					verboseSystem = true;
+
+					break;
+
+				case "-nlb":
+					if(noLookBack)
+						return false;
+
+					noLookBack = true;
 
 					break;
 
@@ -210,7 +226,7 @@ namespace SolveAvdoshin
 			return mode != null;
 		}
 
-		static void PrintAnswers(int n, int a, int b, bool minOps, bool showBlocks)
+		static void PrintAnswers(int n, int a, int b, bool minOps, bool showBlocks, bool noLookBack)
 		{
 			var functions = new Action<int>[] {
 				BooleanFunctions.PrintDerivatives, 
@@ -224,7 +240,6 @@ namespace SolveAvdoshin
 				BooleanFunctions.PrintMaclauren0EqOr, 
 				BooleanFunctions.PrintTailor0EqOr, 
 				BooleanFunctions.PrintClosedClasses, 
-				BooleanFunctions.PrintRepresentBinariesInF,
 			};
 
 			a = Math.Max(a, 3);
@@ -236,10 +251,16 @@ namespace SolveAvdoshin
 				BooleanFunctions.PrintMinimaInAvdoshinBases(n, minOps, showBlocks);
 			}
 
-			for(int i = Math.Max(a, 4); i <= b; i++) {
+			for(int i = Math.Max(a, 4); i <= Math.Min(b, 14); i++) {
 				Console.WriteLine("\n" + i + ".\n");
 
 				functions[i - 4](n);
+			}
+
+			if(b >= 15) {
+				Console.WriteLine("\n15.\n");
+
+				BooleanFunctions.PrintRepresentBinariesInF(n, noLookBack);
 			}
 		}
 
@@ -250,9 +271,10 @@ namespace SolveAvdoshin
 			ExecutionMode? mode;
 			int a, b;
 			int n;
-			bool minOps, showBlocks;
+			bool minOps, showBlocks, noLookBack, verboseSystem;
 
-			if(ProcessCommandLineArgs(args, out mode, out a, out b, out coefs, out n, out minOps, out showBlocks)) {
+			if(ProcessCommandLineArgs(args, out mode, out a, out b, out coefs, out n, out minOps, out showBlocks,
+										out noLookBack, out verboseSystem)) {
 				switch(mode) {
 				case ExecutionMode.Interactive:
 					coefs = ConsoleInput();
@@ -272,11 +294,11 @@ namespace SolveAvdoshin
 				}
 
 				if(a == -1 && b == -1)
-					PrintAnswers(n, 3, 15, minOps, showBlocks);
+					PrintAnswers(n, 3, 15, minOps, showBlocks, noLookBack);
 				else if(a != -1 && b == -1)
-					PrintAnswers(n, a, a, minOps, showBlocks);
+					PrintAnswers(n, a, a, minOps, showBlocks, noLookBack);
 				else
-					PrintAnswers(n, a, b, minOps, showBlocks);
+					PrintAnswers(n, a, b, minOps, showBlocks, noLookBack);
 
 				Console.WriteLine();
 			}
@@ -290,9 +312,14 @@ namespace SolveAvdoshin
 					"\t-ex <a>\t\t\tрешать только <a>-е задание\n" +
 					"\t-ex <a>-<b>\t\tрешать задания с <a> по <b> включительно\n" +
 					"\t\t\t\t(прим.: всего заданий 15)\n\n" +
-					"\t\tопции для 2-3 заданий:\n" +
+					"\t\tдля 1-го задания:\n" +
+					"\t-vs \t\t\tотображать все этапы решения системы\n\n" +
+					"\t\tдля 2-3 заданий:\n" +
 					"\t-mo \t\t\tминимизировать выражения по кол-ву операций\n" +
-					"\t-sb \t\t\tпоказывать кол-во блоков и сами блоки\n");
+					"\t-sb \t\t\tпоказывать кол-во блоков и сами блоки\n\n" +
+					"\t\tдля 15-го задания:\n" +
+					"\t-nlb \t\t\tне использовать при поиске выражений предыдущие\n" +
+					"\t\t\t\tнайденные выражения\n");
 			}
 		}
 	}

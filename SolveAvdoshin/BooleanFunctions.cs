@@ -322,7 +322,7 @@ namespace SolveAvdoshin
 			new Tuple<BooleanOperation, bool[]>(BooleanOperation.NAND, new bool[5] { false, false, false, false, false, }),
 		};
 
-		public static void PrintRepresentBinariesInF(int n)
+		public static void PrintRepresentBinariesInF(int n, bool noLookBack)
 		{
 			bool[] functionClasses = PostClosedClasses.GetFunctionClasses(new BooleanFunction((byte)n));
 
@@ -351,7 +351,8 @@ namespace SolveAvdoshin
 						TertiaryOpExpression.FindMininalExpressionForBinary(targetExpression,
 							new BooleanFunction((byte)n), availableExpressions));
 					
-					availableExpressions.Add(targetExpression);
+					if(!noLookBack)
+						availableExpressions.Add(targetExpression);
 				}
 				catch(CouldntFindExpressionException) {
 					
