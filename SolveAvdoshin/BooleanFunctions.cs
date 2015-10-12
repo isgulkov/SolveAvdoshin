@@ -302,28 +302,34 @@ namespace SolveAvdoshin
 			Console.WriteLine();
 		}
 
+		// Закомменченные функции не рассматриваются в силу избыточности
 		static readonly Tuple<BooleanOperation, bool[]>[] BinariesAndClasses = {
+			new Tuple<BooleanOperation, bool[]>(BooleanOperation.NotA, new bool[5] { false, false, true, false, true, }),
 			new Tuple<BooleanOperation, bool[]>(BooleanOperation.Zero, new bool[5] { true, false, false, true, true, }),
+			new Tuple<BooleanOperation, bool[]>(BooleanOperation.One, new bool[5] { false, true, false, true, true, }),
 			new Tuple<BooleanOperation, bool[]>(BooleanOperation.And, new bool[5] { true, true, false, true, false, }),
 			new Tuple<BooleanOperation, bool[]>(BooleanOperation.CoImp, new bool[5] { true, false, false, false, false, }),
-//			new Tuple<BooleanOperation, bool[]>(BooleanOperation.A, new bool[5] { false, false, false, false, false, } ),
-//			new Tuple<BooleanOperation, bool[]>(BooleanOperation.BCoImp, new bool[5] { false, false, false, false, false, } ),
-//			new Tuple<BooleanOperation, bool[]>(BooleanOperation.B, new bool[5] { false, false, false, false, false, } ),
+//			new Tuple<BooleanOperation, bool[]>(BooleanOperation.A, new bool[5] {  ),
+//			new Tuple<BooleanOperation, bool[]>(BooleanOperation.BCoImp, new bool[5] {  } ),
+//			new Tuple<BooleanOperation, bool[]>(BooleanOperation.B, new bool[5] {  } ),
 			new Tuple<BooleanOperation, bool[]>(BooleanOperation.Xor, new bool[5] { true, false, false, false, true, }),
 			new Tuple<BooleanOperation, bool[]>(BooleanOperation.Or, new bool[5] { true, true, false, true, false, }),
 			new Tuple<BooleanOperation, bool[]>(BooleanOperation.NOR, new bool[5] { false, false, false, false, false, }),
 			new Tuple<BooleanOperation, bool[]>(BooleanOperation.Eq, new bool[5] { false, true, false, false, true, }),
-//			new Tuple<BooleanOperation, bool[]>(BooleanOperation.NotB, new bool[5] { false, false, false, false, false, } ),
-//			new Tuple<BooleanOperation, bool[]>(BooleanOperation.BImp, new bool[5] { false, false, false, false, false, } ),
-			new Tuple<BooleanOperation, bool[]>(BooleanOperation.NotA, new bool[5] { false, false, true, false, true, }),
+//			new Tuple<BooleanOperation, bool[]>(BooleanOperation.NotB, new bool[5] {  } ),
+//			new Tuple<BooleanOperation, bool[]>(BooleanOperation.BImp, new bool[5] {  } ),
 			new Tuple<BooleanOperation, bool[]>(BooleanOperation.Imp, new bool[5] { false, true, false, false, false, }),
 			new Tuple<BooleanOperation, bool[]>(BooleanOperation.NAND, new bool[5] { false, false, false, false, false, }),
-			new Tuple<BooleanOperation, bool[]>(BooleanOperation.One, new bool[5] { false, true, false, true, true, }),
 		};
 
 		public static void PrintRepresentBinariesInF(int n)
 		{
 			bool[] functionClasses = PostClosedClasses.GetFunctionClasses(new BooleanFunction((byte)n));
+
+			var availableExpressions = new List<BooleanExpression> {
+				new VarExpression(BooleanVariable.A),
+				new VarExpression(BooleanVariable.B),
+			};
 
 			foreach(var t in BinariesAndClasses) {
 				bool representable = true;
@@ -339,8 +345,13 @@ namespace SolveAvdoshin
 					continue;
 
 				try {
-					Console.WriteLine((new OpExpression(t.Item1, BooleanVariable.A, BooleanVariable.B)).ToString() + " = " +
-						TertiaryOpExpression.FindMininalExpressionForBinary(t.Item1, new BooleanFunction((byte)n)));
+					var targetExpression = new OpExpression(t.Item1, BooleanVariable.A, BooleanVariable.B);
+
+					Console.WriteLine(targetExpression.ToString() + " = " +
+						TertiaryOpExpression.FindMininalExpressionForBinary(targetExpression,
+							new BooleanFunction((byte)n), availableExpressions));
+					
+					availableExpressions.Add(targetExpression);
 				}
 				catch(CouldntFindExpressionException) {
 					
@@ -421,16 +432,15 @@ namespace SolveAvdoshin
 				firstExpression.Clone());
 		}
 
-		public static BooleanExpression FindMininalExpressionForBinary(BooleanOperation binary, BooleanFunction f)
+		public static BooleanExpression FindMininalExpressionForBinary(BooleanExpression targetBinary, BooleanFunction f,
+			List<BooleanExpression> availableExpressions)
 		{
 			var queue = new ImprovisedPriorityQueue<BooleanExpression>(20);
 			var knownTruthTables = new HashSet<byte>();
 			var knownExpressions = new HashSet<BooleanExpression>();
 
-			var targetExpression = new OpExpression(binary, BooleanVariable.A, BooleanVariable.B);
-
-			foreach(var variable in new BooleanVariable[] { BooleanVariable.A, BooleanVariable.B, }) {
-				queue.TryEnqueue(new VarExpression(variable), 1);
+			foreach(var expression in availableExpressions) {
+				queue.TryEnqueue(expression, 1);
 			}
 
 			while(queue.Count != 0) {
@@ -442,7 +452,7 @@ namespace SolveAvdoshin
 					continue;
 				}
 
-				if((curExperession.Eval() & 0xAA) == (targetExpression.Eval() & 0xAA)) {
+				if((curExperession.Eval() & 0xAA) == (targetBinary.Eval() & 0xAA)) {
 					return curExperession;
 				}
 
