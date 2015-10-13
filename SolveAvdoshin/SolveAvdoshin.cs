@@ -79,11 +79,11 @@ namespace SolveAvdoshin
 			return coefs;
 		}
 
-		static int Solve(int[] coefs)
+		static int Solve(int[] coefs, bool verbose)
 		{
 			Console.WriteLine(PrintEquation(coefs));
 
-			int eqAnswer = AndXorEquation.SolveEq(coefs);
+			int eqAnswer = AndXorEquation.SolveEq(coefs, verbose);
 
 			return eqAnswer;
 		}
@@ -228,6 +228,9 @@ namespace SolveAvdoshin
 
 		static void PrintAnswers(int n, int a, int b, bool minOps, bool showBlocks, bool noLookBack)
 		{
+			if(b == 1)
+				return;
+
 			var functions = new Action<int>[] {
 				BooleanFunctions.PrintDerivatives, 
 				BooleanFunctions.PrintExpressionsForDerivatives, 
@@ -282,9 +285,11 @@ namespace SolveAvdoshin
 					goto case ExecutionMode.CommandLine;
 
 				case ExecutionMode.CommandLine:
-					n = Solve(coefs);
+					Console.WriteLine("\n1.\n");
 
-					Console.WriteLine("\n1.\n\nОтвет: " + n + "\n");
+					n = Solve(coefs, verboseSystem);
+
+					Console.WriteLine("\nОтвет: " + n + "\n");
 
 					break;
 				case ExecutionMode.NoEquation:

@@ -22,15 +22,27 @@ namespace SolveAvdoshin
 			return result;
 		}
 
-		public static int SolveEq(int[] coefs)
+		public static int SolveEq(int[] coefs, bool verbose = false)
 		{
 			if(coefs.Length != 9)
 				throw new ArgumentException("Input array shold be 9 elements long");
 
 			int[,] binaryCoefs = new int[8, 9];
 
+			if(verbose)
+				Console.WriteLine("");
+
 			for(int i = 0; i <= 8; i++) {
 				int[] binary = ConvertToBinary(coefs[i]);
+
+				if(verbose) {
+					Console.Write(coefs[i] + "_10 = ");
+
+					for(int j = 7 - binary.Length + 1; j < 8; j++)
+						Console.Write(binary[7 - j]);
+
+					Console.WriteLine("_2");
+				}
 
 				for(int j = 0; j < binary.Length; j++) {
 					binaryCoefs[7 - j, i] = binary[j];
@@ -40,7 +52,7 @@ namespace SolveAvdoshin
 			var matrix = new AndXorSystem(binaryCoefs);
 
 			try {
-				return matrix.Solve();
+				return matrix.Solve(verbose);
 			}
 			catch(SystemNonConsistentException) {
 				return -1;
@@ -109,11 +121,14 @@ namespace SolveAvdoshin
 			}
 		}
 
-		void MakeCanonical()
+		void MakeCanonical(bool verbose)
 		{
 			// Реализуется алгоритм Гаусса, как Чернышев завещал
 
 			int curRow = 0, curCol = 0;
+
+			if(verbose)
+				Console.WriteLine("\n" + this);
 
 			while(curRow < NumRows && curCol < NumRows) {
 				if(Matrix[curRow, curCol] != 0) {
@@ -123,8 +138,14 @@ namespace SolveAvdoshin
 
 						if(Matrix[i, curCol] == 1) {
 							XorRowIntoAnother(curRow, i);
+
+							if(verbose)
+								Console.WriteLine("({0}) ⨁= ({1})", i, curRow);
 						}
 					}
+
+					if(verbose)
+						Console.WriteLine("\n" + this);
 
 					curRow++;
 					curCol++;
@@ -141,6 +162,11 @@ namespace SolveAvdoshin
 
 					if(nonZeroRow != curRow) {
 						SwapRows(curRow, nonZeroRow);
+
+						if(verbose) {
+							Console.WriteLine("меняем местами {0} и {1} столбцы\n", curRow, nonZeroRow);
+							Console.WriteLine(this);
+						}
 
 						continue;
 					}
@@ -172,9 +198,9 @@ namespace SolveAvdoshin
 			return true;
 		}
 
-		public int Solve()
+		public int Solve(bool verbose = false)
 		{
-			MakeCanonical();
+			MakeCanonical(verbose);
 
 			if(!CheckConsistency())
 				throw new SystemNonConsistentException();
