@@ -249,7 +249,7 @@ namespace SolveAvdoshin
 			b = Math.Max(b, 3);
 
 			if(a <= 3) {
-				Console.WriteLine("\n2-3.\n");
+				Console.WriteLine("\n2-3.");
 
 				BooleanFunctions.PrintMinimaInAvdoshinBases(n, minOps, showBlocks);
 			}
@@ -288,6 +288,10 @@ namespace SolveAvdoshin
 					Console.WriteLine("\n1.\n");
 
 					n = Solve(coefs, verboseSystem);
+
+					if(verboseSystem) {
+						Console.WriteLine(new BooleanFunction((byte)n).ToString());
+					}
 
 					Console.WriteLine("\nОтвет: " + n + "\n");
 
